@@ -44,11 +44,25 @@ function drawTree() {
 		drawTreeBranch("e", "ss")
 		drawTreeBranch("s", "ss")
 	}
+	if (layerUnl('hs')) {
+		drawTreeBranch("hb", "hs", "grey")
+		drawTreeBranch("ss", "hs", "grey")
+	}
+	if (layerUnl('l')) {
+		drawTreeBranch("h", "l")
+		drawTreeBranch("q", "l")
+	}
+	if (layerUnl('c')) {
+		drawTreeBranch("q", "c")
+	}
+	if (layerUnl('i')) {
+		drawTreeBranch("ss", "i")
+	}
 	
 	needCanvasUpdate = false;
 }
 
-function drawTreeBranch(num1, num2) { // taken from Antimatter Dimensions & adjusted slightly
+function drawTreeBranch(num1, num2, color) { // taken from Antimatter Dimensions & adjusted slightly
     let start = document.getElementById(num1).getBoundingClientRect();
     let end = document.getElementById(num2).getBoundingClientRect();
     let x1 = start.left + (start.width / 2) + (document.getElementById("treeTab").scrollLeft || document.body.scrollLeft);
@@ -57,7 +71,7 @@ function drawTreeBranch(num1, num2) { // taken from Antimatter Dimensions & adju
     let y2 = end.top + (end.height / 2) + (document.getElementById("treeTab").scrollTop || document.body.scrollTop);
     ctx.lineWidth = 15;
     ctx.beginPath();
-    ctx.strokeStyle = "white"
+    ctx.strokeStyle = color || "white"
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
