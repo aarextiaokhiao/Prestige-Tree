@@ -103,6 +103,27 @@ function drawTree() {
 		drawTreeBranch("hs", "ma")
 		drawTreeBranch("i", "ma")
 	}
+	if (layerShown('u1')) {
+		drawTreeBranch("hb", "u1")
+	}
+	if (layerShown('u2')) {
+		drawTreeBranch("ss", "u2", 2)
+	}
+	if (layerShown('u3')) {
+		drawTreeBranch("u1", "u3")
+	}
+	if (layerShown('u4')) {
+		drawTreeBranch("u2", "u4")
+	}
+	if (layerShown('u5')) {
+		drawTreeBranch("u3", "u5")
+	}
+	if (layerShown('u6')) {
+		drawTreeBranch("u3", "u6")
+	}
+	if (layerShown('u7')) {
+		drawTreeBranch("u4", "u7")
+	}
 	needCanvasUpdate = false;
 }
 

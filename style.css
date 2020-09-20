@@ -396,6 +396,41 @@ h1, h2, h3, b, input {
 	text-shadow: 0px 0px 10px #9f9f9f;
 }
 
+.u1 {
+	background-color: #bb1bca;
+	color: rgba(0, 0, 0, 0.5);
+}
+
+.u2 {
+	background-color: #ba7255;
+	color: rgba(0, 0, 0, 0.5);
+}
+
+.u3 {
+	background-color: #56c99f;
+	color: rgba(0, 0, 0, 0.5);
+}
+
+.u4 {
+	background-color: #5e868b;
+	color: rgba(0, 0, 0, 0.5);
+}
+
+.u5 {
+	background-color: #de9d7c;
+	color: rgba(0, 0, 0, 0.5);
+}
+
+.u6 {
+	background-color: #36a546;
+	color: rgba(0, 0, 0, 0.5);
+}
+
+.u7 {
+	background-color: #f4e65f;
+	color: rgba(0, 0, 0, 0.5);
+}
+
 #optionWheel {
 	position: absolute;
 	top: 0px;

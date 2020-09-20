@@ -2480,6 +2480,27 @@ function layerShown(layer) {
 		case "ma":
 			return player.mb.unl
 			break
+		case "u1":
+			return player.ma.unl
+			break
+		case "u2":
+			return player.ma.unl
+			break
+		case "u3":
+			return player.ma.unl
+			break
+		case "u4":
+			return player.ma.unl
+			break
+		case "u5":
+			return player.ma.unl
+			break
+		case "u6":
+			return player.ma.unl
+			break
+		case "u7":
+			return player.ma.unl
+			break
 	}
 	return
 }
