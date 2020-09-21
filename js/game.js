@@ -12,6 +12,7 @@ function getStartPlayer() {
 		notify: {},
 		msDisplay: "always",
 		offlineProd: true,
+		hideHindrances: false,
 		versionType: "real",
 		version: VERSION.num,
 		beta: VERSION.beta,
@@ -104,6 +105,7 @@ function getStartPlayer() {
 			auto: false,
 			points: new Decimal(0),
 			best: new Decimal(0),
+			total: new Decimal(0),
 			layers: new Decimal(0),
 			energy: new Decimal(0),
 			time: new Decimal(0),
@@ -186,6 +188,7 @@ function getStartPlayer() {
 		},
 		hs: {
 			unl: false,
+			auto: false,
 			order: 0,
 			points: new Decimal(0),
 			best: new Decimal(0),
@@ -197,6 +200,7 @@ function getStartPlayer() {
 		i: {
 			unl: false,
 			auto: false,
+			autoBuild: false,
 			points: new Decimal(0),
 			best: new Decimal(0),
 			total: new Decimal(0),
@@ -218,13 +222,7 @@ function getStartPlayer() {
 			points: new Decimal(0),
 			best: new Decimal(0),
 			total: new Decimal(0),
-			active: [],
-			combos: {
-				1: [],
-				2: [],
-				3: [],
-				4: []
-			},
+			challs: [],
 			upgrades: [],
 		},
 		ma: {
@@ -232,13 +230,6 @@ function getStartPlayer() {
 			points: new Decimal(0),
 			best: new Decimal(0),
 			built: new Decimal(0),
-			active: {
-				1: false, 
-				2: false, 
-				3: false, 
-				4: false, 
-				5: false
-			},
 			enhancements: new Decimal(0),
 		},
 	}
@@ -268,7 +259,7 @@ const LAYER_REQS = {
 	i: new Decimal("1e285"),
 	mb: new Decimal(29),
 	ge: new Decimal(1e50),
-	ma: new Decimal(1/0),
+	ma: new Decimal(1e160),
 }
 
 const LAYER_RES = {
@@ -343,7 +334,7 @@ const LAYER_EXP = {
 	l: new Decimal(0.012),
 	hs: new Decimal(40),
 	i: new Decimal(1),
-	mb: new Decimal(1.075),
+	mb: new Decimal(1.07),
 	ge: new Decimal(0.05),
 	ma: new Decimal(0.0075),
 }
@@ -359,7 +350,7 @@ const LAYER_BASE = {
 	ss: new Decimal(1.15),
 	ps: new Decimal("1e250"),
 	i: new Decimal("1e20"),
-	mb: new Decimal(1.033),
+	mb: new Decimal(1.03),
 }
 
 const LAYER_USE_TOTAL = ["mb"]
@@ -426,7 +417,7 @@ const LAYER_EFFS = {
 		limit: Decimal.pow(Decimal.add(2, tmp.attb).times(tmp.mttb), player.t.points.add(player.t.extCapsules.add(tmp.freeExtCap).times(getFreeExtPow())).times(getCapPow())).sub(1).times(100).times(getTimeEnergyLimitMult()),
 	}},
 	sb() { return Decimal.pow(Decimal.add(1.5, addToSBBase()), player.sb.points.times(getSuperBoosterPow())) },
-	sg() { return Decimal.pow(Decimal.add(2, addToSGBase()), player.sg.points).sub(1).times(getSuperGenPowerGainMult()).max(0) },
+	sg() { return Decimal.pow(Decimal.add(2, addToSGBase()), player.sg.points.times(getSuperGenPow())).sub(1).times(getSuperGenPowerGainMult()).max(0) },
 	h() { 
 		let ret = player.h.points.add(1).times(player.points.times(player.h.points).add(1).log10().add(1).log10().add(1)).log10().times(5).root(player.q.upgrades.includes(12)?1.25:2);
 		if (player.h.challs.includes(61)) ret = ret.times(1.2);
@@ -1064,7 +1055,7 @@ const LAYER_UPGS = {
 		},
 		12: {
 			desc: "The Quirk Energy and Hindrance Spirit effects use better formulas.",
-			cost: new Decimal(5),
+			cost: new Decimal(3),
 			unl() { return player.q.upgrades.includes(11)&&player.h.best.gte(3) },
 		},
 		13: {
@@ -2005,7 +1996,6 @@ function checkForVars() {
 	if (player.sb.auto === undefined) player.sb.auto = false
 	if (player.timePlayed === undefined) player.timePlayed = 0
 	if (player.hasNaN === undefined) player.hasNaN = false
-	if (player.h.active === undefined) player.h.active = 0
 	if (player.h.time === undefined) player.h.time = player.timePlayed
 	if (player.q.auto === undefined) player.q.auto = false
 	if (player.msDisplay === undefined) player.msDisplay = "always"
@@ -2040,6 +2030,7 @@ function checkForVars() {
 	}
 	if (player.mb.spent === undefined) player.mb.spent = new Decimal(0);
 	if (player.i.auto === undefined) player.i.auto = false
+	if (player.hideHindrances === undefined) player.hideHindrances = false
 }
 
 function convertToDecimal() {
@@ -2116,7 +2107,8 @@ function sumValues(x) {
 	return x.reduce((a, b) => Decimal.add(a, b))
 }
 
-function format(decimal, precision=3) {
+function format(decimal, precision=2) {
+	if (decimal=="X") return "X"
 	decimal = new Decimal(decimal)
 	if (isNaN(decimal.sign)||isNaN(decimal.layer)||isNaN(decimal.mag)) {
 		player.hasNaN = true;
@@ -2128,7 +2120,7 @@ function format(decimal, precision=3) {
 		var slog = decimal.slog()
 		if (slog.gte(1e9)) return "10^^" + format(slog.floor())
 		else if (slog.gte(1000)) return "10^^"+commaFormat(slog, 0)
-		else return "10^^" + commaFormat(slog, 3)
+		else return "10^^" + commaFormat(slog, precision)
 	} else if (decimal.gte("1e1000")) return "e"+formatWhole(decimal.log10())
 	else if (decimal.gte(1e9)) return exponentialFormat(decimal, precision)
 	else if (decimal.gte(1e3)) return commaFormat(decimal, 0)
@@ -2174,10 +2166,10 @@ function canBuyMax(layer) {
 			return player.g.best.gte(15)
 			break;
 		case "t":
-			return player.q.best.gte(2)
+			return player.q.total.gte(2)
 			break;
 		case "s": 
-			return player.q.best.gte(2)
+			return player.q.total.gte(2)
 			break;
 		case "sb":
 			return player.hb.best.gte(1)
@@ -2196,6 +2188,9 @@ function canBuyMax(layer) {
 			break;
 		case "i": 
 			return player.i.best.gte(3)
+			break;
+		case "mb":
+			return player.mb.best.gte(32)
 			break;
 	}
 	return false;
@@ -2264,7 +2259,7 @@ function getLayerGainMult(layer) {
 		case "e": 
 			if (player.e.upgrades.includes(24)&&!(tmp.challActive?tmp.challActive.h[12]:true)) mult = mult.times(LAYER_UPGS.e[24].currently())
 			if (player.h.best.gte(1)) mult = mult.times(100)
-			if (player.q.best.gte(1)) mult = mult.times(100)
+			if (player.q.total.gte(1)) mult = mult.times(100)
 			if (player.q.upgrades.includes(11)) mult = mult.times(LAYER_UPGS.q[11].currently())
 			break;
 		case "t":
@@ -2315,6 +2310,7 @@ function getLayerGainMult(layer) {
 			if (player.sp.upgrades.includes(33)) mult = mult.times(LAYER_UPGS.sp[33].currently())
 			if (player.sp.upgrades.includes(55)) mult = mult.times(LAYER_UPGS.sp[55].currently())
 			if (spellActive(9)) mult = mult.times(tmp.spellEffs[9]);
+			if (player.ge.unl) mult = mult.times(LAYER_CHALLS.ge[22].currently());
 			break;
 		case "l": 
 			if (player.sp.upgrades.includes(41)) mult = mult.times(LAYER_UPGS.sp[41].currently())
@@ -2322,6 +2318,10 @@ function getLayerGainMult(layer) {
 		case "hs": 
 			if (player.sp.upgrades.includes(43)) mult = mult.times(LAYER_UPGS.sp[43].currently())
 			if (player.l.unl && tmp.l !== undefined && tmp.l.lbUnl >= 5) mult = mult.times(tmp.l.lbEff[5])
+			if (player.ma.unl && MACHINES[6].unl()) mult = mult.times(MACHINES[6].currently());
+			break;
+		case "mb":
+			if (player.ma.unl && MACHINES[4].unl()) mult = mult.div(MACHINES[4].currently());
 			break;
 	}
 	return mult
@@ -2350,10 +2350,11 @@ function getLayerGainExp(layer) {
 }
 
 function getResetGain(layer) {
-	if (tmp.gainExp[layer].eq(0)) return new Decimal(0)
+	if (tmp.gainMults[layer].eq(0) || tmp.gainExp[layer].eq(0)) return new Decimal(0)
 	if (LAYER_TYPE[layer]=="static") {
-		if ((!canBuyMax(layer)) || tmp.layerAmt[layer].lt(tmp.layerReqs[layer])) return new Decimal(1)
+		if ((!canBuyMax(layer)) || tmp.layerAmt[layer].lt(tmp.layerReqs[layer]) || tmp.layerAmt[layer].lt(tmp.nextAt[layer])) return new Decimal(1)
 		let gain = tmp.layerAmt[layer].div(tmp.layerReqs[layer]).div(tmp.gainMults[layer]).max(1).log(LAYER_BASE[layer]).times(tmp.gainExp[layer]).pow(Decimal.pow(LAYER_EXP[layer], -1))
+		if (layer=="sg" && gain.gte(16)) gain = gain.times(16).sqrt()
 		if ((LAYER_ROW[layer] < 4 && layer != "hb") || layer == "ps") {
 			if (gain.gte(12)) {
 				if (LAYER_ROW[layer] < 4 && fixValue(tmp.scaling12b).gt(1)) gain = gain.times(tmp.scaling12b).add(tmp.scaling12b.sub(1).times(12))
@@ -2372,7 +2373,7 @@ function getResetGain(layer) {
 }
 
 function getNextAt(layer, disp=false) {
-	if (tmp.gainExp[layer].eq(0)) return new Decimal(1/0)
+	if (tmp.gainMults[layer].eq(0) || tmp.gainExp[layer].eq(0)) return new Decimal(1/0)
 	if (LAYER_TYPE[layer]=="static") {
 		if (!canBuyMax(layer)) disp = false
 		let amt = player[layer][LAYER_USE_TOTAL.includes(layer)?"total":"points"].plus((disp&&tmp.layerAmt[layer].gte(tmp.nextAt[layer]))?tmp.resetGain[layer]:0)
@@ -2480,25 +2481,25 @@ function layerShown(layer) {
 		case "ma":
 			return player.mb.unl
 			break
-		case "u1":
+		case "en":
 			return player.ma.unl
 			break
-		case "u2":
+		case "n":
 			return player.ma.unl
 			break
-		case "u3":
+		case "r":
 			return player.ma.unl
 			break
-		case "u4":
+		case "id":
 			return player.ma.unl
 			break
-		case "u5":
+		case "ai":
 			return player.ma.unl
 			break
-		case "u6":
+		case "dna":
 			return player.ma.unl
 			break
-		case "u7":
+		case "c":
 			return player.ma.unl
 			break
 	}
@@ -2522,7 +2523,7 @@ function rowReset(row, layer) {
 		case 1: 
 			var keepUpgrades = 0
 			if (player.mb.total.gte(1) && keepRows1to4) keepUpgrades = 1
-			else if (player.h.best.gte(1) || player.q.best.gte(1)) keepUpgrades = 1
+			else if (player.h.best.gte(1) || player.q.total.gte(1)) keepUpgrades = 1
 			else if (LAYER_ROW[layer] == 2 && player[layer].best.gte(layer == "e" ? 10 : 3)) keepUpgrades = 1
 			else if (LAYER_ROW[layer] == 1 && player[layer].best.gte(8)) keepUpgrades = 1
 
@@ -2534,7 +2535,7 @@ function rowReset(row, layer) {
 		case 2: 
 			var keepMilestones = 0
 			if (keepRows1to4) keepMilestones = 1
-			else if (player.h.best.gte(2) || player.q.best.gte(2)) keepMilestones = 1
+			else if (player.h.best.gte(2) || player.q.total.gte(2)) keepMilestones = 1
 			else if (LAYER_ROW[layer] == 2 && player[layer].best.gte(layer == "sb" ? 4 : 2)) keepMilestones = 1
 
 			var keepUpgrades = 0
@@ -2556,21 +2557,21 @@ function rowReset(row, layer) {
 			player.t.points = new Decimal(0);
 			player.t.order = 0
 			if (player.h.best.lt(2)&&player.m.total.lt(1)&&!(player.mb.total.gte(1) && (keepRows1to4))) player.t.best = new Decimal(0);
-			if (player.h.best.lt(4)&&!player.sp.total.gte(1)&&!(keepRows1to4)) player.t.upgrades = [];
+			if (player.h.best.lt(3)&&!player.sp.total.gte(1)&&!(keepRows1to4)) player.t.upgrades = [];
 			player.t.extCapsules = new Decimal(0);
 			player.e.order = 0
 			player.e.points = new Decimal(0);
 			if (player.h.best.lt(2)&&player.m.total.lt(1)&&!(keepRows1to4)) player.e.best = new Decimal(0);
 			player.e.enhancers = new Decimal(0);
-			if (player.h.best.lt(4)&&!player.sp.total.gte(1)&&!(keepRows1to4)) player.e.upgrades = [];
+			if (player.h.best.lt(3)&&!player.sp.total.gte(1)&&!(keepRows1to4)) player.e.upgrades = [];
 			player.s = {
 				unl: player.s.unl,
 				order: 0,
 				points: new Decimal(0),
 				best: (player.h.best.gte(2)||player.m.total.gte(1)||(keepRows1to4)) ? player.s.best : new Decimal(0),
-				spent: (player.q.best.gte(4)&&(layer=="h"||layer=="q"||layer=="ss"||layer=="hb")) ? player.s.spent : new Decimal(0),
-				buildings: (player.q.best.gte(4)&&(layer=="h"||layer=="q"||layer=="ss"||layer=="hb")) ? player.s.buildings : ({}),
-				upgrades: (player.h.best.gte(4)||player.sp.total.gte(1)||(keepRows1to4)) ? player.s.upgrades : [],
+				spent: (player.q.total.gte(3)&&(layer=="h"||layer=="q"||layer=="ss"||layer=="hb")) ? player.s.spent : new Decimal(0),
+				buildings: (player.q.total.gte(3)&&(layer=="h"||layer=="q"||layer=="ss"||layer=="hb")) ? player.s.buildings : ({}),
+				upgrades: (player.h.best.gte(3)||player.sp.total.gte(1)||(keepRows1to4)) ? player.s.upgrades : [],
 				auto: player.s.auto,
 				autoBuild: player.s.autoBuild,
 			}
@@ -2607,6 +2608,7 @@ function rowReset(row, layer) {
 				auto: player.q.auto,
 				points: new Decimal(0),
 				best: (player.ba.best.gte(1)||player.m.total.gte(1)||(keepRows1to4))?player.q.best:new Decimal(0),
+				total: (player.ba.best.gte(1)||player.m.total.gte(1)||(keepRows1to4))?player.q.total:new Decimal(0),
 				layers: new Decimal(0),
 				energy: new Decimal(0),
 				time: new Decimal(0),
@@ -2694,6 +2696,7 @@ function rowReset(row, layer) {
 			}
 			player.hs = {
 				unl: player.hs.unl,
+				auto: player.hs.auto,
 				order: 0,
 				points: new Decimal(0),
 				best: (keepRow6Milestones||keepRow6) ? player.hs.best : new Decimal(0),
@@ -2705,6 +2708,7 @@ function rowReset(row, layer) {
 			player.i = {
 				unl: player.i.unl,
 				auto: player.i.auto,
+				autoBuild: player.i.autoBuild,
 				points: new Decimal(0),
 				best: (keepRow6Milestones||keepRow6) ? player.i.best : new Decimal(0),
 				lifeBricks: new Decimal(0),
@@ -2724,7 +2728,7 @@ function rowReset(row, layer) {
 function addPoints(layer, gain) {
 	player[layer].points = player[layer].points.add(gain).max(0)
 	player[layer].best = player[layer].best.max(player[layer].points)
-	if (player[layer].total) player[layer].total = player[layer].total.add(gain)
+	if (player[layer].total) player[layer].total = player[layer].total.add(gain).max(0)
 }
 
 function generatePoints(layer, diff) {
@@ -2753,7 +2757,7 @@ function doReset(layer, force=false) {
 	}
 
 	if ((layer=="b"&&player.t.best.gte(12))||(layer=="g"&&player.s.best.gte(12))) return;
-	if ((layer=="t"&&player.h.best.gte(25))||(layer=="s"&&player.q.best.gte(25))||(layer=="sb"&&player.h.best.gte(2500))||(layer=="sg"&&player.sg.best.gte(1))) return;
+	if ((layer=="t"&&player.h.best.gte(25))||(layer=="s"&&player.q.total.gte(25))||(layer=="sb"&&player.h.best.gte(2500))||(layer=="sg"&&player.sg.best.gte(1))) return;
 	if ((layer=="hb"&&player.ba.best.gte(8))||(layer=="ss"&&player.ba.best.gte(8))) return;
 	if (layer=="ps"&&player.ps.best.gte(5)) return;
 	if (layer=="i"&&player.mb.total.gte(10)&&!force) return;
@@ -2796,6 +2800,8 @@ function buyUpg(layer, id) {
 }
 
 function getPointGen() {
+	if (tmp.challActive ? tmp.challActive.ge[12] : true) return tmp.quirkEff
+	
 	let gain = new Decimal(1)
 	if (player.p.upgrades.includes(12)) gain = gain.times(LAYER_UPGS.p[12].currently())
 	if (player.p.upgrades.includes(13)) gain = gain.times(LAYER_UPGS.p[13].currently())
@@ -2906,21 +2912,6 @@ function getGenPowerEff() {
 	return eff
 }
 
-function resetRow(row) {
-	if (prompt('Are you sure you want to reset this row? It is highly recommended that you wait until the end of your current run before doing this! Type "I WANT TO RESET THIS" to confirm')!="I WANT TO RESET THIS") return
-	let pre_layers = ROW_LAYERS[row-1]
-	let layers = ROW_LAYERS[row]
-	let post_layers = ROW_LAYERS[row+1]
-	rowReset(row+1, post_layers[0])
-	doReset(pre_layers[0], true)
-	for (let layer in layers) {
-		player[layers[layer]].unl = false
-		if (player[layers[layer]].order) player[layers[layer]].order = 0
-	}
-	updateTemp();
-	resizeCanvas();
-}
-
 function getEnhancerPow() {
 	if (tmp.challActive ? tmp.challActive.h[22] : true) return new Decimal(0);
 	if (tmp.challActive ? tmp.challActive.h[41] : true) return new Decimal(0);
@@ -2935,6 +2926,7 @@ function getEnhancerPow() {
 
 function getEnhancerEff() {
 	if (!player.e.unl) return new Decimal(1)
+	if (tmp.challActive ? tmp.challActive.ge[31] : true) return new Decimal(1)
 	let e = player.e.enhancers.sub(tmp.subbedEnh).times(tmp.enhPow)
 	let eff;
 	if (e.gte(0)) eff = Decimal.pow(25, e.pow(1.1))
@@ -2944,6 +2936,7 @@ function getEnhancerEff() {
 
 function getEnhancerEff2() {
 	if (!player.e.unl) return new Decimal(0)
+	if (tmp.challActive ? tmp.challActive.ge[31] : true) return new Decimal(1)
 	let e = player.e.enhancers.sub(tmp.subbedEnh).times(tmp.enhPow)
 	let eff;
 	if (e.gte(0)) eff = e.pow(0.8)
@@ -2982,6 +2975,7 @@ function getFreeExtCapsules() {
 
 function getCapPow() {
 	if (tmp.challActive ? tmp.challActive.h[41] : true) return new Decimal(0)
+	if (tmp.challActive ? tmp.challActive.ge[31] : true) return new Decimal(0)
 	let pow = new Decimal(1)
 	if (player.q.upgrades.includes(33)) pow = pow.times(LAYER_UPGS.q[33].currently())
 	if (spellActive(2)) pow = pow.times(tmp.spellEffs[2])
@@ -3066,7 +3060,7 @@ function getSpace() {
 	if (player.s.upgrades.includes(24)&&!(tmp.challActive?tmp.challActive.h[12]:true)) baseSpace = baseSpace.add(3);
 	if (player.ss.unl) baseSpace = baseSpace.add(tmp.ssEff1)
 	if (player.ss.upgrades.includes(11)) baseSpace = baseSpace.add(LAYER_UPGS.ss[11].currently())
-	return baseSpace.sub(player.s.spent).max(0)
+	return baseSpace.sub((player.hs.best.gte(1e150)) ? 0 : player.s.spent).max(0)
 }
 
 let SPACE_BUILDINGS = {
@@ -3159,7 +3153,7 @@ let SPACE_BUILDINGS = {
 			return x.max(1).log10().div(3).max(1).cbrt()
 		},
 		effDesc(x) {
-			return "Reduce the cost scaling of Hyperspace by " + format(Decimal.sub(1, x.recip()).times(100)) + "%"
+			return "Reduce the cost scaling of Hyperspace by " + (x=="X"?"X":format(Decimal.sub(1, x.recip()).times(100))) + "%"
 		}
 	},
 	10: {
@@ -3168,7 +3162,7 @@ let SPACE_BUILDINGS = {
 			return x.max(1).log10().div(5).max(1)
 		},
 		effDesc(x) {
-			return "Super-Upgrades are " + format(x.sub(1).times(100)) + "% stronger"
+			return "Super-Upgrades are " + (x=="X"?"X":format(x.sub(1).times(100))) + "% stronger"
 		}
 	},
 }
@@ -3208,6 +3202,7 @@ function getSpaceBuildingPow() {
 	if (!player.s.unl) return new Decimal(0)
 	if (tmp.challActive ? tmp.challActive.h[22] : true) return new Decimal(0)
 	if (tmp.challActive ? tmp.challActive.h[41] : true) return new Decimal(0)
+	if (tmp.challActive ? tmp.challActive.ge[31] : true) return new Decimal(0)
 	let pow = new Decimal(1)
 	if (player.s.upgrades.includes(21)&&!(tmp.challActive?tmp.challActive.h[12]:true)) pow = pow.times(LAYER_UPGS.s[21].currently())
 	if (player.s.upgrades.includes(22)&&!(tmp.challActive?tmp.challActive.h[12]:true)) pow = pow.times(LAYER_UPGS.s[22].currently())
@@ -3225,6 +3220,7 @@ function getExtraBuildingLevels() {
 	if (player.s.upgrades.includes(14)&&!(tmp.challActive?tmp.challActive.h[12]:true)) lvl = lvl.add(1);
 	if (player.q.upgrades.includes(31)) lvl = lvl.add(1);
 	if (player.m.upgrades.includes(32)) lvl = lvl.add(LAYER_UPGS.m[32].currently())
+	if (player.ma.unl && MACHINES[1].unl()) lvl = lvl.add(MACHINES[1].currently())
 	return lvl
 }
 
@@ -3236,7 +3232,8 @@ function getSpaceBuildingEff(x) {
 		if (x < 5 && tmp.s.trueSbUnl >= 5) bought = bought.add(tmp.s.sbEff[5])
 
 		var compressLvl = new Decimal(1)
-		if (tmp.i !== undefined && layerUnl("i") && tmp.i.compressed >= x) compressLvl = tmp.s.sbUnl.sub(x - SPACE_BUILDINGS.max - 1).div(SPACE_BUILDINGS.max).ceil().cbrt()
+		if (tmp.i !== undefined && layerUnl("i") && tmp.i.compressed >= x) compressLvl = new Decimal(tmp.s.sbUnl).sub(x - SPACE_BUILDINGS.max - 1).div(SPACE_BUILDINGS.max).ceil().cbrt()
+		if (tmp.challActive ? tmp.challActive.ge[22] : true) compressLvl = new Decimal(0);
 		
 		let extraSU = new Decimal(0)
 		if (player.l.unl && tmp.l !== undefined && tmp.l.lbUnl >= 8) extraSU = extraSU.plus(tmp.l.lbEff[8]);
@@ -3280,7 +3277,7 @@ function destroyBuilding(x, all=false) {
 	if (!player.s.unl) return
 	if (tmp.s.trueSbUnl<x) return
 	if (tmp.s.sb[x].lt(1)) return
-	if (player.q.best.lt(2500)) return
+	if (player.q.total.lt(2500)) return
 	addSpaceBuilding(x, all ? tmp.s.sb[x].neg() : -1)
 }
 
@@ -3304,6 +3301,8 @@ function getSpaceBuildingsUnl() {
 	if (player.s.upgrades.includes(14)&&!(tmp.challActive?tmp.challActive.h[12]:true)) x++;
 	if (player.s.upgrades.includes(32)&&!(tmp.challActive?tmp.challActive.h[12]:true)) x++;
 	if (layerUnl("i")) {
+		if (tmp.challActive ? tmp.challActive.ge[22] : true) return new Decimal(x);
+		
 		x = new Decimal(x)
 		if (player.i.unl) x = x.add(player.i.extraBuildings)
 	}
@@ -3316,10 +3315,12 @@ function toggleAuto(layer, end="") {
 
 function getSuperBoosterPow() {
 	if (tmp.challActive ? tmp.challActive.h[41] : true) return new Decimal(0)
+	if (tmp.challActive ? tmp.challActive.ge[11] : true) return new Decimal(0)
 	let pow = new Decimal(1)
 	if (player.sb.upgrades.includes(11)&&!(tmp.challActive?tmp.challActive.h[12]:true)) pow = pow.times(LAYER_UPGS.sb[11].currently())
 	if (player.sb.upgrades.includes(12)&&!(tmp.challActive?tmp.challActive.h[12]:true)) pow = pow.times(LAYER_UPGS.sb[12].currently())
 	if (player.hb.upgrades.includes(11)) pow = pow.times(LAYER_UPGS.hb[11].currently())
+	if (player.ge.unl) pow = pow.times(LAYER_CHALLS.ge[11].currently())
 	return pow;
 }
 
@@ -3340,7 +3341,7 @@ function getQuirkLayerCostBase() {
 
 function getQuirkLayerCost(layers) {
 	if (layers === undefined) layers = player.q.layers
-	if (layers.gte(20)) layers = Decimal.pow(1.05, layers.sub(20)).times(20)
+	if (layers.gte(20)) layers = Decimal.pow(player.h.challs.includes(72)?1.025:1.05, layers.sub(20)).times(20)
 	if (player.ba.upgrades.includes(55)) layers = layers.sub(LAYER_UPGS.ba[55].currently())
 	let cost = Decimal.pow(tmp.qCB, Decimal.pow(tmp.qCB, layers).sub(1))
 	return cost.max(1);
@@ -3349,7 +3350,7 @@ function getQuirkLayerCost(layers) {
 function getQuirkLayerTarg() {
 	let targ = player.q.points.log(tmp.qCB).add(1).log(tmp.qCB)
 	if (player.ba.upgrades.includes(55)) targ = targ.add(LAYER_UPGS.ba[55].currently())
-	if (targ.gte(20)) targ = targ.div(20).log(1.05).add(20)
+	if (targ.gte(20)) targ = targ.div(20).log(player.h.challs.includes(72)?1.025:1.05).add(20)
 	return targ.add(1).floor()
 }
 
@@ -3361,6 +3362,7 @@ function getQuirkLayerMult() {
 	if (player.q.upgrades.includes(52)) mult = mult.times(LAYER_UPGS.q[52].currently())
 	if (player.h.challs.includes(52)) mult = mult.times(LAYER_CHALLS.h[52].currently())
 	if (player.ba.upgrades.includes(13)) mult = mult.times(LAYER_UPGS.ba[13].currently())
+	if (player.ge.unl) mult = mult.times(LAYER_CHALLS.ge[31].currently());
 	return mult
 }
 
@@ -3376,6 +3378,7 @@ function getExtraQuirkLayers() {
 function getQuirkEnergyGainExp() {
 	let mult = new Decimal(1)
 	if (spellActive(3)) mult = mult.times(tmp.spellEffs[3])
+	if (player.ge.unl) mult = mult.times(LAYER_CHALLS.ge[12].currently())
 	return player.q.layers.add(getExtraQuirkLayers()).sub(1).times(mult)
 }
 
@@ -3418,7 +3421,12 @@ const LAYER_CHALLS = {
 	h: {
 		rows: 7,
 		cols: 2,
+		res() { return player.points },
+		resDisp: "Points",
+		choose: 1,
 		active(x) {
+			if (x==12) if (LAYER_CHALLS.ge.active(31)) return true;
+			if (x<72) if (this.active(72)) return true;
 			if (x<71&&x!=42&&x!=52) if (this.active(71)) return true
 			if (x==11||x==41) if (this.active(51)) return true
 			if (x==31||x==32) if (this.active(61)) return true
@@ -3537,21 +3545,72 @@ const LAYER_CHALLS = {
 			effDisp(x) { return format(x)+"x" },
 		},
 		72: {
-			name: "You shouldn't be seeing this",
-			desc: "Never gonna give you up, never gonna let you down, never gonna run around and dessert you",
-			unl() { return false },
-			goal: new Decimal(1/0),
-			reward: "???",
+			name: "The Truly Final Stockade",
+			desc: "All previous Hindrances are applied at once.",
+			unl() { return player.ma.enhancements.gte(1) },
+			goal: new Decimal("1e350000"),
+			reward: "The post-20 Quirk Layer cost scaling is 50% weaker.",
 		},
 	},
-	test: {
-		rows: 1,
-		cols: 1,
+	ge: {
+		rows: 3,
+		cols: 2,
+		res() { return player.p.points },
+		resDisp: "Prestige Points",
+		choose: 2,
+		active(x) {
+			return (player.ge.active||[]).includes(x);
+		},
 		11: {
-			name: "You shouldn't be seeing this",
-			desc: "Never gonna give you up, never gonna let you down, never gonna run around and dessert you",
+			name: "Unique Gameplay",
+			desc: "All Super & Hyper layers do nothing (but their upgrades still work).",
 			unl() { return true },
-			goal: new Decimal(0),
+			goal: new Decimal("1e10000"),
+			reward: "Gears boost the efficiency of all Super & Hyper layers.",
+			currently() { return player.ge.points.plus(1).log2().plus(1).log10().plus(1).log10().div(2).times(Decimal.cbrt(tmp.challActive?(tmp.challActive.ge.combos[11]||0):0)).plus(1) },
+			effDisp(x) { return format(x.sub(1).times(100))+"% more efficient" },
+		},
+		12: {
+			name: "All for Nothing",
+			desc: "Quirk Energy's boost to Point gain is the only source of Point generation.",
+			unl() { return true },
+			goal: new Decimal("1e1930"),
+			reward: "Gears make Quirk Layers more efficient.",
+			currently() { return player.ge.points.plus(1).log2().plus(1).log2().plus(1).log10().div(5).times(tmp.challActive?(tmp.challActive.ge.combos[12]||0):0).plus(1) },
+			effDisp(x) { return format(x.sub(1).times(100))+"% more efficient" },
+		},
+		21: {
+			name: "Mechanical Exhaustion",
+			desc: "Work is increased by 0.75.",
+			unl() { return true },
+			goal: new Decimal("1e2750"),
+			reward: "Gears raise Life Power to an exponent.",
+			currently() { return player.ge.points.plus(1).log10().plus(1).log10().times(tmp.challActive?(tmp.challActive.ge.combos[21]||0):0).plus(1) },
+			effDisp(x) { return "^"+format(x) },
+		},
+		22: {
+			name: "The Olden Days",
+			desc: "All row 6 layers other than Super-Prestige do nothing.",
+			unl() { return true },
+			goal: new Decimal("1e3875"),
+			reward: "Gears boost Super-Prestige Point gain.",
+			currently() { return player.ge.points.plus(1).pow(tmp.challActive?Math.pow(tmp.challActive.ge.combos[22]||0, 0.8):0).pow(1.25) },
+			effDisp(x) { return format(x)+"x" },
+		},
+		31: {
+			name: "Crank of the Dead",
+			desc: "All row 3 layers other than Super-Boosters and Super-Generators do nothing (including upgrades).",
+			unl() { return player.ma.enhancements.gte(3) },
+			goal: new Decimal("1e8325"),
+			reward: "Gears & Best Machine Power multiply all Quirk Layers.",
+			currently() { return player.ge.points.plus(1).times(player.ma.best.plus(1)).log10().plus(1).pow(tmp.challActive?(tmp.challActive.ge.combos[31]||0):0).pow(150) },
+			effDisp(x) { return format(x)+"x" },
+		},
+		32: {
+			name: "???",
+			desc: "You aren't supposed to see this...",
+			unl() { return false },
+			goal: new Decimal("10^^69"),
 			reward: "???",
 		},
 	},
@@ -3559,21 +3618,73 @@ const LAYER_CHALLS = {
 
 function startChall(layer, x) {
 	if (!player[layer].unl) return
-	if (player[layer].active == x) {
-		completeChall(layer, x)
-		delete player[layer].active
+	if (LAYER_CHALLS[layer].choose==1) {
+		if (player[layer].active==x) {
+			completeChall(layer, x)
+			delete player[layer].active
+		} else {
+			player[layer].active = x
+		}
 	} else {
-		player[layer].active = x
+		if (!player[layer].choices) {
+			player[layer].choices = [x]
+			return;
+		} else if (player[layer].choices.includes(x)&&player[layer].choices.length<LAYER_CHALLS[layer].choose) {
+			delete player[layer].choices
+			return;
+		} else if (player[layer].choices.length<LAYER_CHALLS[layer].choose) {
+			player[layer].choices.push(x)
+			return;
+		} else {
+			let activeChalls = ((player[layer].active instanceof Array) ? player[layer].active : [player[layer].active])
+			if (activeChalls.includes(x)) {
+				for (let chall in activeChalls) completeChall(layer, chall)
+				delete player[layer].active
+				delete player[layer].choices
+			} else {
+				let selectedChalls = ((player[layer].choices instanceof Array) ? player[layer].choices : [player[layer].choices])
+				if (selectedChalls.includes(x)) {
+					player[layer].active = player[layer].choices
+				} else return;
+			}
+		}
 	}
 	doReset(layer, true)
 	updateChallTemp(layer)
 }
 
+function calcChallGoal(layer, x) {
+	if (LAYER_CHALLS[layer].choose==1) return LAYER_CHALLS[layer][x].goal;
+	else {
+		let goal = LAYER_CHALLS[layer][x[0]].goal
+		for (let i=1;i<LAYER_CHALLS[layer].choose;i++) if (LAYER_CHALLS[layer][x[i]]) goal = Decimal.pow(10, goal.log10().times(LAYER_CHALLS[layer][x[i]].goal.log10()));
+		return goal;
+	}
+}
+
 function completeChall(layer, x) {
 	var x = player[layer].active
 	if (!x) return
-	if (!player.points.gte(LAYER_CHALLS[layer][x].goal)) return
-	if (!player[layer].challs.includes(x)) {
+	if (x==""||x==0||x==[]) return;
+	if (!LAYER_CHALLS[layer].res().gte(tmp.challActive[layer].goal)) return
+	if (LAYER_CHALLS[layer].choose>1) {
+		let challCombo = []
+		for (let i=0;i<LAYER_CHALLS[layer].choose;i++) challCombo.push(player[layer].active[i])
+		let contained = false
+		for (let i=0;i<player[layer].challs.length;i++) {
+			let combo = player[layer].challs[i]
+			let semiContained = 0
+			for (let j=0;j<combo.length;j++) {
+				let chall = combo[j]
+				if (challCombo.includes(chall)) semiContained++
+			}
+			if (semiContained>=combo.length) {
+				contained = true
+				break;
+			}
+		}
+		if (!contained) player[layer].challs.push(challCombo);
+	} else if (!player[layer].challs.includes(x)) {
 		if (layer == "h" && x == 62) needCanvasUpdate = true
 		player[layer].challs.push(x);
 	}
@@ -3657,8 +3768,11 @@ function getExtraHyperBoosters() {
 }
 
 function getHyperBoosterPow() {
+	if (tmp.challActive ? tmp.challActive.ge[11] : true) return new Decimal(0)
+	
 	let pow = new Decimal(1)
 	if (player.hb.upgrades.includes(12)) pow = pow.times(LAYER_UPGS.hb[12].currently())
+	if (player.ge.unl) pow = pow.times(LAYER_CHALLS.ge[11].currently())
 	return pow;
 }
 
@@ -3711,7 +3825,7 @@ const SPELL_NAMES = {
 	1: "Booster Launch",
 	2: "Time Warp",
 	3: "Quirk Amplification",
-	4: "Spacial Compression",
+	4: "Spatial Compression",
 	5: "Stockade Multiplication",
 	6: "Generator Augmentation",
 	7: "Shatter Serum",
@@ -3763,6 +3877,8 @@ function getSpellPower(x) {
 	if (player.l.unl && tmp.l !== undefined && tmp.l.lbUnl >= 6) power = power.times(tmp.l.lbEff[6])
 	if (spellActive(10) && x<10) power = power.times(tmp.spellEffs[10]);
 	if (tmp.mb) power = power.times(tmp.mb.spellBoost)
+	
+	if (power.gte(100)) power = power.log10().times(50).min(power)
 	return power.max(1);
 }
 
@@ -3854,6 +3970,8 @@ function getSGenPowEff() {
 }
 
 function getSuperGenPowerGainMult() {
+	if (tmp.challActive ? tmp.challActive.ge[11] : true) return new Decimal(0)
+	
 	let mult = new Decimal(1)
 	if (player.ba.upgrades.includes(21)) mult = mult.times(LAYER_UPGS.ba[21].currently())
 	return mult
@@ -3868,6 +3986,12 @@ function addToSGBase() {
 	return toAdd
 }
 
+function getSuperGenPow() {
+	let pow = new Decimal(1)
+	if (player.ge.unl) pow = pow.times(LAYER_CHALLS.ge[11].currently())
+	return pow
+}
+
 function getLifePowerMult() {
 	let x = tmp.layerEffs.ps.mult.div(30)
 	if (player.sp.upgrades.includes(42)) x = x.times(LAYER_UPGS.sp[42].currently())
@@ -3878,6 +4002,7 @@ function getLifePowerMult() {
 
 function getLifePowerExp() {
 	let x = tmp.layerEffs.ps.exp
+	if (player.ge.unl) x = x.times(LAYER_CHALLS.ge[21].currently())
 	return x
 }
 
@@ -3917,8 +4042,11 @@ let LIFE_BOOSTERS = {
 		return power
 	},
 	eff() {
+		if (tmp.challActive ? tmp.challActive.ge[22] : true) return new Decimal(0)
+		
 		let eff = player.l.power.add(1).log10();
 		if (tmp.mb) eff = eff.times(tmp.mb.lbBoost)
+		if (player.ma.unl && MACHINES[3].unl()) eff = eff.times(MACHINES[3].currently())
 		return eff;
 	},
 	req(x) {
@@ -3990,7 +4118,7 @@ let LIFE_BOOSTERS = {
 			return str.plus(1).log10().plus(1).log10().div(4).plus(1);
 		},
 		effDesc(x) {
-			return "All Spells are "+format(x.sub(1).times(100))+"% stronger"
+			return "All Spells are "+(x=="X"?"X":format(x.sub(1).times(100)))+"% stronger"
 		},
 	},
 	7: {
@@ -4021,7 +4149,7 @@ let LIFE_BOOSTERS = {
 			return Decimal.sub(1, Decimal.div(1, str.plus(1).log10().plus(1)));
 		},
 		effDesc(x) {
-			return "All previous Life Booster costs scale "+format(x.times(100))+"% slower"
+			return "All previous Life Booster costs scale "+(x=="X"?"X":format(x.times(100)))+"% slower"
 		},
 	},
 	10: {
@@ -4031,7 +4159,7 @@ let LIFE_BOOSTERS = {
 			return str.plus(1).log10().sqrt().plus(1);
 		},
 		effDesc(x) {
-			return "The post-12 Phantom Soul cost scaling is "+format(x.sub(1).times(100))+"% weaker"
+			return "The post-12 Phantom Soul cost scaling is "+(x=="X"?"X":format(x.sub(1).times(100)))+"% weaker"
 		},
 	},
 }
@@ -4045,6 +4173,13 @@ let HYPERSPACE = {
 			hs: Decimal.pow(2, x.sqr()).div(reduction).floor(),
 			ba: Decimal.pow(10, x.max(x.div(2).sqr()).times(20).add(150)).div(reduction).floor()
 		}
+	},
+	target() {
+		let reduction = this.costReduction()
+		let targetHS = player.hs.points.times(reduction).max(1).log2().sqrt().plus(1).floor()
+		let targetBA = player.ba.points.times(reduction).max(1).log10().sub(150).div(20).plus(1).floor()
+		let target = targetHS.min(targetBA)
+		return target;
 	},
 	costReduction() {
 		let r = new Decimal(1)
@@ -4078,17 +4213,24 @@ let HYPERSPACE = {
 		doReset("hs", true)
 	},
 	eff() {
+		if (tmp.challActive ? tmp.challActive.ge[22] : true) return new Decimal(0)
+		
 		let r = new Decimal(1)
 		if (player.ba.upgrades.includes(35)) r = r.times(1.25)
 		if (tmp.s !== undefined && tmp.s.trueSbUnl >= 10) r = r.times(tmp.s.sbEff[10])
+		if (player.ma.unl && MACHINES[5].unl()) r = r.times(MACHINES[5].currently())
 		return r
 	},
 	nextCapReq(x) {
 		if (x === undefined) x = player.hs.superUpgradeCap
-		return Decimal.times(x, 200).add(1300)
+		let req = Decimal.times(x, 200).add(1300)
+		if (player.ma.unl && MACHINES[2].unl()) req = req.sub(MACHINES[2].currently()).max(0)
+		return req;
 	},
 	nextCapTarget() {
-		let x = player.g.points.sub(1300).div(200)
+		let x = new Decimal(0)
+		if (player.ma.unl && MACHINES[2].unl()) x = x.plus(MACHINES[2].currently())
+		x = x.plus(player.g.points).sub(1300).div(200)
 		return x.floor().add(1)
 	},
 	effs: {
@@ -4125,8 +4267,15 @@ let HYPERSPACE = {
 	}
 }
 
+function maxHyperspace() {
+	if (!HYPERSPACE.canBuy()) return;
+	let target = HYPERSPACE.target();
+	if (target.lte(player.hs.space)) return;
+	player.hs.space = player.hs.space.max(target)
+}
+
 let VERSION = {
-	beta: 1,
+	beta: 4,
 	num: 1.2,
 	name: "The Mechanical Update"
 }
@@ -4136,10 +4285,14 @@ VERSION.withName = VERSION.withoutName + (VERSION.name ? ": " + VERSION.name : "
 
 let IMPERIUM = {
 	lifeReq() {
-		return Decimal.pow(10, player.i.lifeBricks.times(2).sqr().add(15))
+		let bricks = player.i.lifeBricks
+		if (bricks.gte(50)) bricks = Decimal.pow(1.02, bricks.sub(50)).times(50)
+		return Decimal.pow(10, bricks.times(2).sqr().add(15))
 	},
 	lifeTarget() {
-		return player.l.power.max(1).log10().sub(15).sqrt().div(2).add(1).floor()
+		let target = player.l.power.max(1).log10().sub(15).sqrt().div(2).add(1).floor()
+		if (target.gte(50)) target = target.div(50).log(1.02).plus(50)
+		return target;
 	},
 	canBuild() {
 		let cost = this.cost()
@@ -4162,10 +4315,23 @@ let IMPERIUM = {
 	cost(x) {
 		if (x === undefined) x = player.i.extraBuildings
 		let sub = player.sp.upgrades.includes(45) ? 3 : 0
+		if (x.gte(20)) x = Decimal.pow(1.05, x.sub(19)).times(20)
 		return {
 			i: x.times(1.75).add(0.5).sub(sub).ceil().max(0),
 			l: x.times(1.5).add(1).sub(sub).ceil().max(0)
 		}
+	},
+	target() {
+		let sub = player.sp.upgrades.includes(45) ? 3 : 0
+		let i = player.i.points.plus(sub).sub(0.5).div(1.75)
+		if (i.gte(20)) i = i.div(20).log(1.05).plus(19)
+		let targetI = i.plus(1).floor()
+	
+		let l = player.i.lifeBricks.plus(sub).sub(1).div(1.5)
+		if (l.gte(20)) l = l.div(20).log(1.05).plus(19)
+		let targetL = l.plus(1).floor()
+	
+		return targetI.min(targetL)
 	},
 	speed() {
 		let x = Decimal.pow(3.75, player.i.extraBuildings.add(5)).recip()
@@ -4187,27 +4353,54 @@ let IMPERIUM = {
 	minSB: 5,
 }
 
+function maxImperiumBuildings() {
+	if (!IMPERIUM.canBuild()) return
+	let target = IMPERIUM.target()
+	if (target.lte(player.i.extraBuildings)) return;
+	player.i.extraBuildings = player.i.extraBuildings.max(target);
+}
+
 const MASTERY = {
 	spellCost() {
-		let bought = player.mb.extraSpells.plus(player.mb.extraBoosters.times(0.5));
-		if (bought.gte(6)) bought = bought.pow(3).div(36)
-		let cost = bought.pow(2).plus(1);
+		let bought = player.mb.extraSpells;
+		let cost = bought.pow(2).plus(1).plus(player.mb.extraBoosters).plus(player.ma.built);
 		return cost.floor();
 	},
 	boosterCost() {
-		let bought = player.mb.extraBoosters.plus(player.mb.extraSpells.times(0.5));
-		if (bought.gte(6)) bought = bought.pow(3).div(36)
-		let cost = bought.pow(3).plus(1).times(2);
+		let bought = player.mb.extraBoosters;
+		let cost = bought.pow(3).plus(1).times(2).plus(player.mb.extraSpells).plus(player.ma.built);
+		return cost.floor();
+	},
+	machineCost() {
+		let bought = player.ma.built;
+		let cost = bought.plus(1).pow(1.5).times(2).plus(player.mb.extraSpells).plus(player.mb.extraBoosters);
 		return cost.floor();
 	},
 	respec() {
 		if (!player.mb.unl || !confirm("Are you sure? This will perform a Row 7 reset and will reset your Mastery Buildings!")) return
 		player.mb.extraSpells = new Decimal(0)
 		player.mb.extraBoosters = new Decimal(0)
+		player.ma.built = new Decimal(0)
 		player.mb.points = player.mb.points.plus(player.mb.spent)
 		player.mb.best = player.mb.best.max(player.mb.points)
 		player.mb.spent = new Decimal(0)
 		doReset("mb", true)
+	},
+	tooltip(x) {
+		switch(x) {
+			case 1: 
+				if (player.mb.extraSpells.lt(MAX_SPELLS-4)) return "Next Effect: "+SPELL_DESCS[player.mb.extraSpells.plus(5).toNumber()]
+				else return "Currently: "+format(tmp.mb.spellBoost.sub(1).times(100))+"% stronger"
+				break;
+			case 2: 
+				if (player.mb.extraBoosters.lt(LIFE_BOOSTERS.max-5)) return "Next Effect: "+LIFE_BOOSTERS[player.mb.extraBoosters.plus(6).toNumber()].effDesc("X")
+				else return "Currently: "+format(tmp.mb.lbBoost.sub(1).times(100))+"% stronger"
+				break;
+			case 3: 
+				if (player.ma.built.lt(MACHINES.maxBuild)) return "Next Effect: "+MACHINES[player.ma.built.plus(1).toNumber()].reward
+				else return "Currently: "+format(tmp.mb.machBoost.sub(1).times(100))+"% stronger"
+				break;
+		}
 	},
 }
 
@@ -4227,6 +4420,96 @@ function unlockNewLB() {
 	player.mb.points = player.mb.points.sub(cost);
 	player.mb.spent = player.mb.spent.plus(cost);
 	player.mb.extraBoosters = player.mb.extraBoosters.plus(1);
+}
+
+function unlockNewMachine() {
+	if (!player.mb.unl) return;
+	if (!player.ma.unl) return;
+	let cost = MASTERY.machineCost()
+	if (player.mb.points.lt(cost)) return;
+	player.mb.points = player.mb.points.sub(cost);
+	player.mb.spent = player.mb.spent.plus(cost);
+	player.ma.built = player.ma.built.plus(1);
+}
+
+const MACHINES = {
+	maxBuild: 5,
+	max: 6,
+	1: {
+		unl() { return player.ma.built.gte(1) },
+		reward: "Unused Space adds extra levels to all Space Buildings.",
+		currently() { return getSpace().sqrt().times(player.ma.enhancements.sqrt().plus(1).pow(2)).times(tmp.mb ? tmp.mb.machBoost : 1) },
+		effDisp(x) { return "+"+format(x) },
+	},
+	2: {
+		unl() { return player.ma.built.gte(2) },
+		reward: "The requirement to increase the cap of Super-Upgrades is lower based on your Total Hyperspace.",
+		currently() { return player.hs.space.plus(1).times(player.ma.enhancements.sqrt().plus(1)).times(tmp.mb ? tmp.mb.machBoost : 1).log10().times(105).floor() },
+		effDisp(x) { return "-"+formatWhole(x) },
+	},
+	3: {
+		unl() { return player.ma.built.gte(3) },
+		reward: "All Life Boosters are stronger based on your Best Machine Power.",
+		currently() { 
+			let ret = player.ma.best.plus(1).log10().times(player.ma.enhancements.sqrt().plus(1)).times(tmp.mb ? tmp.mb.machBoost : 1).plus(1) 
+			if (ret.gte(26)) ret = ret.log10().times(26/Math.log10(26)).min(ret)
+			return ret;
+		},
+		effDisp(x) { return format(x.sub(1).times(100))+"% stronger" },
+	},
+	4: {
+		unl() { return player.ma.built.gte(4) },
+		reward: "Gears make Mastery Bricks cheaper.",
+		currently() { return player.ge.points.plus(1).log10().plus(1).log10().times(player.ma.enhancements.sqrt().plus(1).times(10)).times(tmp.mb ? tmp.mb.machBoost : 1).plus(1).log10().plus(1) },
+		effDisp(x) { return "/"+format(x) },
+	},
+	5: {
+		unl() { return player.ma.built.gte(5) },
+		reward: "All Super-Upgrades are stronger based on your Imperium Bricks & Life Bricks.",
+		currently() { return player.i.points.plus(player.i.lifeBricks).plus(1).log10().times(player.ma.enhancements.sqrt().plus(1)).times(tmp.mb ? tmp.mb.machBoost : 1).plus(1).log10().plus(1) },
+		effDisp(x) { return format(x.sub(1).times(100))+"% stronger" },
+	},
+	6: {
+		unl() { return player.ma.enhancements.gte(2) },
+		reward: "Best Machine Power boosts Hyperspace Energy gain.",
+		currently() { return player.ma.best.plus(1).log10().plus(1).pow(player.ma.enhancements.sqrt().plus(1)).pow(tmp.mb ? tmp.mb.machBoost : 1).pow(15) },
+		effDisp(x) { return format(x)+"x" },
+	},
+	
+	lvlCost(res) {
+		let e = player.ma.enhancements
+		if (e.gte(4)) e = Decimal.pow(1.3, e.sub(4)).times(4)
+		if (res=="ma") return Decimal.pow(10, e.pow(2).plus(1))
+		else return e.plus(1).pow(2).plus(14)
+	},
+	lvlUpDesc() { 
+		let desc = "Power up all Machines"
+		let x = player.ma.enhancements;
+		if (x.lte(2)) {
+			desc += " and "
+			let y = x.toNumber()+1;
+			switch(y) {
+				case 1: 
+					desc += "unlock a new Hindrance";
+					break;
+				case 2: 
+					desc += "unlock a new Machine";
+					break;
+				case 3: 
+					desc += "unlock a new Mechanical Challenge";
+					break;
+			}
+		}
+		return desc;
+	},
+	canLvlUp() { return player.ma.points.gte(this.lvlCost("ma")) && player.i.points.gte(this.lvlCost("i")) },
+}
+
+function lvlUpMachines() {
+	if (!MACHINES.canLvlUp()) return;
+	player.ma.points = player.ma.points.sub(MACHINES.lvlCost("ma"))
+	player.i.points = player.i.points.sub(MACHINES.lvlCost("i"))
+	player.ma.enhancements = player.ma.enhancements.plus(1);
 }
 
 const ENDGAME = new Decimal(1/0); // Previously e280,000,000
@@ -4299,7 +4582,7 @@ function gameLoop(diff) {
 		let exp = getQuirkEnergyGainExp()
 		if (exp.gte(0)) player.q.energy = player.q.energy.add(player.q.time.pow(exp).times(mult).times(diff)).max(0)
 	}
-	if (player.q.best.gte(15)) generatePoints("e", diff)
+	if (player.q.total.gte(15)) generatePoints("e", diff)
 	if (player.ss.unl) player.ss.subspace = player.ss.subspace.add(tmp.layerEffs.ss.times(diff)).max(0)
 	if (player.ba.unl) {
 		player.ba.power = player.ba.power.add(tmp.layerEffs.ba.power.times(tmp.balEff2).times(getBalPowGainMult()).times(diff)).max(0)
@@ -4329,7 +4612,7 @@ function gameLoop(diff) {
 	if (player.i.unl) {
 		player.i.lifeBricks = player.i.lifeBricks.max(IMPERIUM.lifeTarget())
 		if (player.i.building) player.i.progress += IMPERIUM.speed().times(diff).toNumber()
-		if (player.i.progress >= 1) {
+		if ((player.i.progress >= 1)||(player.ma.best.gte(5)&&player.i.building)) {
 			player.i.progress = 0
 			player.i.extraBuildings = player.i.extraBuildings.add(1)
 			delete player.i.building
@@ -4341,10 +4624,10 @@ function gameLoop(diff) {
 
 	if (player.b.auto&&player.t.best.gte(5)) doReset("b")
 	if (player.g.auto&&player.s.best.gte(5)) doReset("g")
-	if (player.e.auto&&player.q.best.gte(5)) maxEnhancers()
-	if (player.t.autoCap&&player.h.best.gte(5)) maxExtTimeCapsules()
-	if (player.t.auto&&player.q.best.gte(10)) doReset("t")
-	if (player.s.auto&&player.q.best.gte(10)) doReset("s")
+	if (player.e.auto&&player.q.total.gte(4)) maxEnhancers()
+	if (player.t.autoCap&&player.h.best.gte(4)) maxExtTimeCapsules()
+	if (player.t.auto&&player.q.total.gte(10)) doReset("t")
+	if (player.s.auto&&player.q.total.gte(10)) doReset("s")
 	if (player.s.autoBuild&&player.ss.best.gte(1)) for (let i=tmp.s.trueSbUnl;i>=1;i--) maxSpaceBuilding(i)
 	if (player.sb.auto&&player.h.best.gte(15)) doReset("sb")
 	if (player.sg.auto&&player.sg.best.gte(2)) doReset("sg")
@@ -4358,6 +4641,8 @@ function gameLoop(diff) {
 	if (player.m.auto&&player.m.total.gte(50)) for (let i=1;i<=tmp.spellsUnl;i++) activateSpell(i)
 	if (player.ps.auto&&player.ps.best.gte(2)) doReset("ps")
 	if (player.i.auto&&player.mb.total.gte(10)) doReset("i")
+	if (player.hs.auto&&player.ma.best.gte(1e15)) maxHyperspace()
+	if (player.i.autoBuild&&player.ma.best.gte(1e15)) maxImperiumBuildings()
 
 	if (player.hasNaN&&!NaNalert) {
 		clearInterval(interval);
@@ -4419,6 +4704,7 @@ function changeTheme() {
 	document.body.style.setProperty('--background_tooltip', aqua ? "rgba(0, 15, 31, 0.75)" : "rgba(0, 0, 0, 0.75)")
 	document.body.style.setProperty('--color', aqua ? "#bfdfff" : "#dfdfdf")
 	document.body.style.setProperty('--points', aqua ? "#dfefff" : "#ffffff")
+	document.body.style.setProperty("--locked", aqua ? "#c4a7b3" : "#bf8f8f")
 }
 
 function getThemeName() {

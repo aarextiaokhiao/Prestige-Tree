@@ -97,32 +97,34 @@ function drawTree() {
 		drawTreeBranch("ps", "mb", 2)
 	}
 	if (layerShown('ge')) {
-		drawTreeBranch("sp", "ge")
+		drawTreeBranch("sp", "ge", 2)
 	}
 	if (layerShown('ma')) {
 		drawTreeBranch("hs", "ma")
 		drawTreeBranch("i", "ma")
 	}
-	if (layerShown('u1')) {
-		drawTreeBranch("hb", "u1")
+	if (layerShown('en')) {
+		drawTreeBranch("hb", "en")
 	}
-	if (layerShown('u2')) {
-		drawTreeBranch("ss", "u2", 2)
+	if (layerShown('n')) {
+		drawTreeBranch("ss", "n", 2)
 	}
-	if (layerShown('u3')) {
-		drawTreeBranch("u1", "u3")
+	if (layerShown('r')) {
+		drawTreeBranch("en", "r")
 	}
-	if (layerShown('u4')) {
-		drawTreeBranch("u2", "u4")
+	if (layerShown('id')) {
+		drawTreeBranch("n", "id")
 	}
-	if (layerShown('u5')) {
-		drawTreeBranch("u3", "u5")
+	if (layerShown('ai')) {
+		drawTreeBranch("r", "ai")
+		drawTreeBranch("id", "ai", 3)
 	}
-	if (layerShown('u6')) {
-		drawTreeBranch("u3", "u6")
+	if (layerShown('dna')) {
+		drawTreeBranch("l", "dna")
 	}
-	if (layerShown('u7')) {
-		drawTreeBranch("u4", "u7")
+	if (layerShown('c')) {
+		drawTreeBranch("i", "c")
+		drawTreeBranch("id", "c")
 	}
 	needCanvasUpdate = false;
 }
