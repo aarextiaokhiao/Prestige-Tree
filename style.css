@@ -2,13 +2,14 @@
 	transition-duration: 0.5s;
 	text-align: center;
 	font-family: "Inconsolata", monospace;
-	font-weight: 700;
+	font-weight: bold;
 	table-align: center;
 	margin: auto;
 }
 
 *:focus {
-	outline: thin dotted white;
+	outline: none;
+	webkit-outline: none;
 }
 
 body {
@@ -52,6 +53,11 @@ td {
 	vertical-align: 0
 }
 
+.bigUpgAlign {
+	height: 200px;
+	vertical-align: 0
+}
+
 h1, h2, h3, b, input {
 	display: inline;
 	font-family: "Lucida Console", "Courier New", monospace
@@ -61,7 +67,7 @@ h1, h2, h3, b, input {
 	height: 100px;
 	width: 100px;
 	border: var(--hqProperty1);
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 	border-radius: 50%;
 	box-shadow: var(--hqProperty2a), var(--hqProperty2b);
 	font-size: 40px;
@@ -71,8 +77,7 @@ h1, h2, h3, b, input {
 }
 
 .locked {
-	background: var(--locked) !important;
-	background-color: var(--locked) !important;
+	background-color: #bf8f8f;
 	cursor: not-allowed;
 }
 
@@ -87,8 +92,8 @@ h1, h2, h3, b, input {
 
 .treeNode.notify {
 	transform: scale(1.1, 1.1);
-	border-color: rgba(0, 0, 0, 0.125);
-	box-shadow: var(--hqProperty2a), 0px 0px 20px #ff0000 !important;
+	border-color: rgba(255, 0, 0, 0.125) rgba(255, 0, 0, 0.25) rgba(255, 0, 0, 0.25) rgba(255, 0, 0, 0.125);
+	box-shadow: var(--hqProperty2a), 0px 0px 20px #ff0000;
 	z-index: 3
 }
 
@@ -99,8 +104,7 @@ h1, h2, h3, b, input {
 }
 
 .bought {
-	background: #77bf5f !important;
-	background-color: #77bf5f !important;
+	background-color: #77bf5f;
 	cursor: default;
 }
 
@@ -108,8 +112,8 @@ h1, h2, h3, b, input {
 	position: absolute;
 	top: 0px;
 	left: 0px;
-	background-color: var(--background);
-	border: 1px solid var(--background);
+	background-color: transparent;
+	border: 1px solid transparent;
 	color: var(--color);
 	font-size: 40px;
 	cursor: pointer;
@@ -120,12 +124,31 @@ h1, h2, h3, b, input {
 	text-shadow: 0px 0px 7px var(--color);
 }
 
+.tabButton {
+	background-color: transparent;
+	border: none;
+	color: var(--color);
+	font-size: 20px;
+	cursor: pointer;
+	padding: 5px 20px 5px 20px;
+	margin: 5px 5px 5px 5px;
+	border-radius: 25%;
+	border: 2px solid;
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
+
+}
+
+.tabButton:hover {
+	transform: scale(1.1, 1.1);
+	text-shadow: 0px 0px 7px var(--color);
+}
+
 .reset {
 	height: 120px;
 	width: 180px;
 	border-radius: 25%;
 	border: 4px solid;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 }
 
 .upg {
@@ -133,7 +156,16 @@ h1, h2, h3, b, input {
 	width: 120px;
 	border-radius: 25%;
 	border: 2px solid;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
+	font-size: 10px;
+}
+
+.buyable {
+	height: 200px;
+	width: 200px;
+	border-radius: 25%;
+	border: 2px solid;
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 	font-size: 10px;
 }
 
@@ -142,7 +174,7 @@ h1, h2, h3, b, input {
 	width: 200px;
 	border-radius: 25%;
 	border: 2px solid;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 }
 
 .longUpg {
@@ -151,7 +183,7 @@ h1, h2, h3, b, input {
 	background: var(--points);
 	border-radius: 50%;
 	border: 2px solid;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 	font-size: 10px;
 }
 
@@ -160,258 +192,12 @@ h1, h2, h3, b, input {
 	width: 40px;
 	border-radius: 25%;
 	border: 2px solid;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 }
 
 #points {
 	color: var(--points);
 	text-shadow: 0px 0px 10px var(--points);
-}
-
-.p {
-	background-color: #00bfbf;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.p_txt {
-	color: #00bfbf;
-	text-shadow: 0px 0px 10px #00bfbf;
-}
-
-.b {
-	background-color: #415a9e;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.b_txt {
-	color: #415a9e;
-	text-shadow: 0px 0px 10px #415a9e;
-}
-
-.g {
-	background-color: #409c6e;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.g_txt {
-	color: #409c6e;
-	text-shadow: 0px 0px 10px #409c6e;
-}
-
-.e {
-	background-color: #9643a3;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.e_txt {
-	color: #9643a3;
-	text-shadow: 0px 0px 10px #9643a3;
-}
-
-.t {
-	background-color: #3f993d;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.t_txt {
-	color: #3f993d;
-	text-shadow: 0px 0px 10px #3f993d;
-}
-
-.s {
-	background-color: #dfdfdf;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.s_txt {
-	color: #dfdfdf;
-	text-shadow: 0px 0px 10px #dfdfdf;
-}
-
-.sb {
-	background-color: #494b99;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.sb_txt {
-	color: #494b99;
-	text-shadow: 0px 0px 10px #494b99;
-}
-
-.h {
-	background-color: #a14040;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.h_txt {
-	color: #a14040;
-	text-shadow: 0px 0px 10px #a14040;
-}
-
-.q {
-	background-color: #ff2bf2;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.q_txt {
-	color: #ff2bf2;
-	text-shadow: 0px 0px 10px #ff2bf2;
-}
-
-.hb {
-	background-color: #513d94;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.hb_txt {
-	color: #513d94;
-	text-shadow: 0px 0px 10px #513d94;
-}
-
-.ss {
-	background-color: #eff7ff;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.ss_txt {
-	color: #eff7ff;
-	text-shadow: 0px 0px 10px #eff7ff;
-}
-
-.hg {
-	background-color: #3d9989;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.hg_txt {
-	color: #3d9989;
-	text-shadow: 0px 0px 10px #3d9989;
-}
-
-.m {
-	background-color: #eb34c0;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.m_txt {
-	color: #eb34c0;
-	text-shadow: 0px 0px 10px #eb34c0;
-}
-
-.ba {
-	background-color: #ebc88f;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.ba_txt {
-	color: #ebc88f;
-	text-shadow: 0px 0px 10px #ebc88f;
-}
-
-.sg {
-	background-color: #3d997a;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.sg_txt {
-	color: #3d997a;
-	text-shadow: 0px 0px 10px #3d997a;
-}
-
-.sp {
-	background-color: #00a7bf;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.sp_txt {
-	color: #00a7bf;
-	text-shadow: 0px 0px 10px #00a7bf;
-}
-
-.l {
-	background-color: #7fbf7f;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.l_txt {
-	color: #7fbf7f;
-	text-shadow: 0px 0px 10px #7fbf7f;
-}
-
-.ps {
-	background-color: #b38fbf;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.ps_txt {
-	color: #b38fbf;
-	text-shadow: 0px 0px 10px #b38fbf;
-}
-
-.hs {
-	background-color: #dfdfff;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.hs_txt {
-	color: #dfdfff;
-	text-shadow: 0px 0px 10px #dfdfff;
-}
-
-.i {
-	background-color: #e5dab7;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.i_txt {
-	color: #e5dab7;
-	text-shadow: 0px 0px 10px #e5dab7;
-}
-
-.mb {
-	background: radial-gradient(circle, rgba(255,100,100,1) 0%, rgba(255,159,127,1) 50%);
-	background-size: 200%;
-	background-position: center;
-	color: rgba(0, 0, 0, 0.5);
-	animation: mb 4s infinite;
-}
-
-@keyframes mb {
-	0% {
-		background-size: 200%;
-	}
-	50% {
-		background-size: 100%;
-	}
-	100% {
-		background-size: 200%;
-	}
-}
-
-.mb_txt {
-	color: #ff9f7f;
-	text-shadow: 0px 0px 10px #ff9f7f;
-}
-
-.ge {
-	background-color: rgba(191,191,191,1);
-	background: radial-gradient(circle, rgba(191,191,191,1) 0%, rgba(131,133,134,1) 100%);
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.ge_txt {
-	color: #bfbfbf;
-	text-shadow: 0px 0px 10px #bfbfbf;
-}
-
-.ma {
-	background: radial-gradient(circle, rgba(112,109,109,1) 0%, rgba(159,159,159,1) 100%);
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.ma_txt {
-	color: #9f9f9f;
-	text-shadow: 0px 0px 10px #9f9f9f;
 }
 
 #optionWheel {
@@ -461,7 +247,7 @@ h1, h2, h3, b, input {
 
 #version {
 	position: absolute;
-	right: 8px;
+	right: 4px;
 	top: 4px;
 	text-align: right;
 	color: var(--points);
@@ -470,8 +256,8 @@ h1, h2, h3, b, input {
 }
 
 #version:hover {
-	transform: scale(1.1, 1.1);
-	right: 9.6px;
+	transform: scale(1.2, 1.2);
+	right: 4.8px;
 }
 
 a {
@@ -498,8 +284,6 @@ a {
 	transform: scale(1.2, 1.2);
 	text-shadow: 5px 0px 10px #02f2f2,
               -3px 0px 12px #02f2f2;
-	width: 80%;
-	min-width: 80%;
 }
 
 .opt {
@@ -508,7 +292,7 @@ a {
 	border-radius: 25%;
 	border: 4px solid;
 	background-color: var(--color);
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 	color: rgba(0, 0, 0, 0.5);
 	cursor: pointer;
 }
@@ -532,22 +316,20 @@ a {
 .milestone {
 	width: 100%;
 	height: 75px;
-	background: #bf8f8f;
 	background-color: #bf8f8f;
 	border: 4px solid;
 	border-radius: 4px;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 	color: rgba(0, 0, 0, 0.5);
 }
 
 .milestoneDone {
 	width: 100%;
 	height: 75px;
-	background: #77bf5f;
 	background-color: #77bf5f;
 	border: 4px solid;
 	border-radius: 4px;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 	color: rgba(0, 0, 0, 0.5);
 }
 
@@ -599,15 +381,23 @@ a {
 	top: 0
 }
 
+.vl2 {
+	border-left: 3px solid var(--color);
+	height: 100%;
+}
+
+.hl {
+	border-top: 3px solid var(--color);
+}
+
 ul {
 	list-style-type: none;
 }
 
 .hChall {
-	background: #bf8f8f;
 	background-color: #bf8f8f;
 	border: 4px solid;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-color: rgba(255, 255, 255, 0.125) rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgba(255, 255, 255, 0.125);
 	color: rgba(0, 0, 0, 0.5);
 	width: 300px;
 	height: 300px;
@@ -633,27 +423,9 @@ ul {
 	transition-duration: 0s
 }
 
-.machine {
-	background: #c9c9c9;
-	background-color: #c9c9c9;
-	border: 10px solid;
-	border-color: rgba(0, 0, 0, 0.125);
-	color: rgba(0, 0, 0, 0.5);
-	width: 200px;
-	height: 200px;
-	font-size: 15px;
-	border-radius: 20%;
-}
-
-#loadingSection {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-}
-
 [tooltip] {
 	position: relative;
-	z-index: 2
+	z-index: 999999 !important
 }
 
 [tooltip]:before,
@@ -710,4 +482,10 @@ ul {
 	filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
 	opacity: 1;
 	white-space: pre-wrap;
+}
+
+#loadingSection {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }

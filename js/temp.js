@@ -1,192 +1,312 @@
-function updateTemp() {
-	if (!tmp.challActive) {
-		let LAYERS_WITH_CHALLS = Object.keys(LAYER_CHALLS)
-		tmp.challActive = {}
-		for (let i = 0; i < LAYERS_WITH_CHALLS.length; i++) {
-			tmp.challActive[LAYERS_WITH_CHALLS[i]] = {}
-			updateChallTemp(LAYERS_WITH_CHALLS[i])
+function setupTemp(){
+	if (!tmp.challActive) {tmp.challActive = {}}
+	if (!tmp.challs) tmp.challs = {}
+	for (layer in layers) {
+		if(layers[layer].challs !== undefined){
+			tmp.challActive[layer] = {}
+			setupChallTemp(layer)
+		}
+	}
+
+	if (!tmp.upgrades) tmp.upgrades = {}
+	for (layer in layers) {
+		if(layers[layer].upgrades !== undefined){
+			setupUpgradeTemp(layer)
 		}
 	}
 	
-	if (!tmp.layerEffs) tmp.layerEffs = {}
-	for (let name in LAYER_DATA) if (LAYER_DATA[name].eff) tmp.layerEffs[name] = LAYER_DATA[name].eff()
+	if (!tmp.milestones) tmp.milestones = {}
+	for (layer in layers) {
+		if(layers[layer].milestones !== undefined){
+			setupMilestoneTemp(layer)
+		}
+	}
+	if (!tmp.buyables) tmp.buyables = {}
+	for (layer in layers) if (layers[layer].buyables) {
+		if(layers[layer].buyables !== undefined){
+			setupBuyableTemp(layer)
+		}
+	}
+}
+
+function updateTemp() {
+	if (tmp.genPoints == undefined) tmp.genPoints = false
+
 
 	if (!tmp.layerReqs) tmp.layerReqs = {}
-	for (let name in LAYER_DATA) tmp.layerReqs[name] = LAYER_DATA[name].getReq()
+	for (layer in layers) tmp.layerReqs[layer] = layers[layer].requires()
+
+	if (!tmp.layerEffs) tmp.layerEffs = {}
+	for (layer in layers) if (layers[layer].effect) tmp.layerEffs[layer] = layers[layer].effect()
 
 	if (!tmp.gainMults) tmp.gainMults = {}
 	if (!tmp.gainExp) tmp.gainExp = {}
 	if (!tmp.resetGain) tmp.resetGain = {}
 	if (!tmp.nextAt) tmp.nextAt = {}
-	if (!tmp.nextAtDisp) tmp.nextAtDisp = {}
 	if (!tmp.layerAmt) tmp.layerAmt = {}
-	for (let layer in LAYER_DATA) {
-		tmp.layerAmt[layer] = LAYER_DATA[layer].getAmt()
-		tmp.gainMults[layer] = getLayerGainMult(layer)
-		tmp.gainExp[layer] = getLayerGainExp(layer)
+	if (!tmp.layerColor) tmp.layerColor = {}
+	if (!tmp.layerShown) tmp.layerShown = {}
+	if (!tmp.effectDescription) tmp.effectDescription = {}
+	if (!tmp.style) tmp.style = {}
+	if (!tmp.nodeStyle) tmp.nodeStyle = {}
+	if (!tmp.notify) tmp.notify = {}
+	if (!tmp.nextAtDisp) tmp.nextAtDisp = {}
+	if (!tmp.prestigeButtonText) tmp.prestigeButtonText = {}
+	if (!tmp.canReset) tmp.canReset = {}
+	if (!tmp.tooltips) tmp.tooltips = {}
+	if (!tmp.tooltipsLocked) tmp.tooltipsLocked = {}
+
+	for (layer in layers) {
+		if (layers[layer].color) tmp.layerColor[layer] = layers[layer].color()
+		if (layers[layer].style) tmp.style[layer] = layers[layer].style()
+		tmp.layerShown[layer] = layers[layer].layerShown()
+		tmp.layerAmt[layer] = layers[layer].baseAmount()
+		tmp.gainMults[layer] = layers[layer].gainMult()
+		tmp.gainExp[layer] = layers[layer].gainExp()
 		tmp.resetGain[layer] = getResetGain(layer)
 		tmp.nextAt[layer] = getNextAt(layer)
+		tmp.notify[layer] = shouldNotify(layer)
 		tmp.nextAtDisp[layer] = getNextAt(layer, true)
+		if (layers[layer].effectDescription) tmp.effectDescription[layer] = layers[layer].effectDescription()
+		if (layers[layer].canReset) tmp.canReset[layer] = layers[layer].canReset()
+		if (layers[layer].prestigeButtonText) tmp.prestigeButtonText[layer] = layers[layer].prestigeButtonText()
+		if (layers[layer].tooltip) tmp.tooltips[layer] = layers[layer].tooltip()
+		if (layers[layer].tooltipLocked) tmp.tooltipsLocked[layer] = layers[layer].tooltipLocked()
+		if (layers[layer].nodeStyle) tmp.nodeStyle[layer] = layers[layer].nodeStyle()
 	}
 
 	tmp.pointGen = getPointGen()
 
-	tmp.scaling12b = getScaling12Boosters()
-	tmp.scaling12ps = getScaling12PS()
-
-	tmp.atbb = addToBoosterBase()
-	tmp.atgb = addToGenBase()
-
-	tmp.genPowEff = getGenPowerEff()
-
-	tmp.enhPow = getEnhancerPow()
-	tmp.enhEff = getEnhancerEff()
-	tmp.enhEff2 = getEnhancerEff2()
-	tmp.subbedEnh = new Decimal(0)
-	if (tmp.challActive ? tmp.challActive.h[52] : true) {
-		tmp.subbedEnh = tmp.subbedEnh.add(new Decimal(player.h.time).times(40).add(1).log10().pow(10).max(10)).round()
+	for (layer in layers){
+		if (layers[layer].updateTemp) layers[layer].updateTemp()
 	}
 
-	tmp.freeExtCap = getFreeExtCapsules()
-	tmp.timeEff = getTimeEnergyEff()
-	tmp.attb = addToTimeBase()
-	tmp.mttb = multiplyToTimeBase()
-
-	if (layerUnl("s")) {
-		tmp.s = {
-			sb: {},
-			sbEff: {}
-		}
-		var data = tmp.s
-
-		data.sbUnl = getSpaceBuildingsUnl()
-		data.trueSbUnl = Decimal.min(data.sbUnl, SPACE_BUILDINGS.max).floor().toNumber()
-		data.sbCostMult = getSpaceBuildingCostMult()
-		data.sbCostMod = getSpaceBuildingCostMod()
-		data.sbExtra = getExtraBuildingLevels()
-		data.sbPow = getSpaceBuildingPow()
-		data.sbSum = sumValues(player.s.buildings)
-		for (let i=data.trueSbUnl;i>=1;i--) {
-			data.sb[i] = fixValue(player.s.buildings[i])
-			data.sbEff[i] = getSpaceBuildingEff(i)
+	if (!tmp.componentStyles) tmp.componentStyles = {}
+	for (layer in layers) if (layers[layer].componentStyles) {
+		if(layers[layer].componentStyles !== undefined){
+			tmp.componentStyles[layer] = {}
+			for (item in layers[layer].componentStyles)
+				tmp.componentStyles[layer][item] = layers[layer].componentStyles[item]()
 		}
 	}
 
-	tmp.quirkEff = getQuirkEnergyEff()
 
-	tmp.ssEff1 = getSubspaceEff1()
-	tmp.ssEff2 = getSubspaceEff2()
-	tmp.ssEff3 = getSubspaceEff3()
-
-	tmp.balEff = getBalancePowerEff()
-	tmp.balEff2 = getBalanceTypesEff()
-	tmp.baExp = getBalanceEnergyExp()
-
-	tmp.hexEff = getHexEff()
-	tmp.spellsUnl = Math.min((player.sp.upgrades.includes(13)?4:3)+player.mb.extraSpells.toNumber(), MAX_SPELLS)
-	if (!tmp.spellEffs) tmp.spellEffs = {}
-	for (let i=1;i<=MAX_SPELLS;i++) tmp.spellEffs[i] = getSpellEff(i)
-
-	tmp.sGenPowEff = getSGenPowEff()
-
-	if (layerUnl("l")) {
-		if (!tmp.l) tmp.l = {
-			lb: {},
-			lbEff: {}
+	if (!tmp.microtabs) tmp.microtabs = {}
+	for (layer in layers) {
+		if (!tmp.microtabs[layer]) tmp.microtabs[layer] = {}
+		if (layers[layer].microtabs) {
+			if(layers[layer].microtabs !== undefined){
+				updateMicrotabTemp(layer)
+			}
 		}
-		var data = tmp.l
-		var data2 = LIFE_BOOSTERS
+		if(layers[layer].tabFormat && !Array.isArray(layers[layer].tabFormat)){
+			let data2 = layers[layer].tabFormat
+			let set = "mainTabs"
+			if (!tmp.microtabs[layer][set]) tmp.microtabs[layer][set] = {}
+			for (tab in data2) {
+				if (!tmp.microtabs[layer][set][tab])
+					tmp.microtabs[layer][set][tab] = {}
+				if(data2[tab].style)
+					tmp.microtabs[layer][set][tab].style = data2[tab].style()
+				if(data2[tab].buttonStyle)
+					tmp.microtabs[layer][set][tab].buttonStyle = data2[tab].buttonStyle()
+			}
+		}	
+	}
 
-		data.lpEff = data2.eff()
-		data.lbUnl = data2.unl()
-		for (let i=1;i<=data2.max;i++) {
-			data.lb[i] = new Decimal(fixValue(player.l.boosters[i]))
-			data.lbEff[i] = data2[i].eff(data.lb[i].times(data.lpEff))
+
+	if (!tmp.challActive) {tmp.challActive = {}}
+	if (!tmp.challs) tmp.challs = {}
+	for (layer in layers) {
+		if(layers[layer].challs !== undefined){
+			tmp.challActive[layer] = {}
+			updateChallTemp(layer)
 		}
 	}
 
-	if (layerUnl("hs")) {
-		if (!tmp.hs) tmp.hs = {
-			su: {},
-			suEff: {}
+	if (!tmp.upgrades) tmp.upgrades = {}
+	for (layer in layers) {
+		if(layers[layer].upgrades !== undefined){
+			updateUpgradeTemp(layer)
 		}
-		var data = tmp.hs
-		var data2 = HYPERSPACE
-
-		data.eff = data2.eff()
-		for (let i=1;i<=tmp.s.trueSbUnl;i++) data.su[i] = fixValue(player.hs.superUpgrades[i])
-	}
-
-	if (layerUnl("i")) {
-		if (!tmp.i) tmp.i = {}
-		var data = tmp.i
-
-		data.work = new Decimal(1)
-		if (player.i.building) data.work = data.work.add(player.i.extraBuildings.add(1).sqrt().add(1).div(5))
-		if (tmp.challActive ? tmp.challActive.ge[21] : true) data.work = data.work.add(0.75)
-		data.workEff = Decimal.pow(2, data.work.sub(1))
-
-		data.collapse = {}
-		for (var i = 1; i <= IMPERIUM.maxCollapseRows; i++) if (data.work.gt(i + 0.5)) data.collapse[i] = data.work.sub(i + 0.5).times(2).min(1)
-
-		data.compressed = tmp.s.sbUnl.sub(SPACE_BUILDINGS.max).max(0).floor().toNumber()
 	}
 	
-	if (layerUnl("ge")) {
-		if (!tmp.ge) tmp.ge = {}
-		var data = tmp.ge 
-		
-		data.pow = getMechChallPow()
+	if (!tmp.milestones) tmp.milestones = {}
+	for (layer in layers) {
+		if(layers[layer].milestones !== undefined){
+			updateMilestoneTemp(layer)
+		}
 	}
-	
-	if (layerUnl("mb")) {
-		if (!tmp.mb) tmp.mb = {}
-		var data = tmp.mb
-		
-		data.spellBoost = player.mb.extraSpells.sub(MAX_SPELLS-4).max(0).plus(1).log10().div(2).plus(1).sqrt()
-		data.lbBoost = player.mb.extraBoosters.sub(LIFE_BOOSTERS.max-5).max(0).plus(1).log10().div(2).plus(1).sqrt()
-		data.machBoost = player.ma.built.sub(MACHINES.maxBuild).max(0).plus(1)
-	}
-	
-	if (layerUnl("ma")) {
-		if (!tmp.ma) tmp.ma = {}
-		var data = tmp.ma
-		
-		data.pow = getMachinePower()
+	if (!tmp.buyables) tmp.buyables = {}
+	for (layer in layers) if (layers[layer].buyables) {
+		if(layers[layer].buyables !== undefined){
+			updateBuyableTemp(layer)
+		}
 	}
 }
 
+
+
 function updateChallTemp(layer) {
 	if (player[layer] === undefined) return
+	if (!tmp.challs[layer]) tmp.challs[layer] = {}
 
 	let data = tmp.challActive[layer]
-	let data2 = LAYER_CHALLS[layer]
+	let data2 = layers[layer].challs
 	let customActive = data2.active !== undefined
-	let otherChoices = data2.choose>1
-	if (!data.combos) data.combos = {}
-	let comboData = player[layer].challs.reduce(function (acc, curr) {
-		if (acc[curr] === undefined) acc[curr] = 1;
-		else acc[curr] += 1;
-		return acc;
-	}, {})
-	
-	let goalToFind = player[layer].active||player[layer].choices
-	if (goalToFind==0||goalToFind==[]||goalToFind==""||goalToFind===undefined) data.goal = new Decimal(0)
-	else data.goal = calcChallGoal(layer, goalToFind)
 	for (let row = 1; row <= data2.rows; row++) {
 		for (let col = 1; col <= data2.cols; col++) {
 			let id = row * 10 + col
-			if (otherChoices) {
-				let total = 0
-				Object.keys(comboData).forEach(key => {
-					if (key.split(",").includes(id.toString())) total += comboData[key]
-				})
-				data.combos[id] = total;
-			}
-			
-			if (player[layer].active===undefined) delete data[id]
-			else if (customActive ? data2.active(id) : (otherChoices ? player[layer].active.includes(id) : (player[layer].active == id))) data[id] = 1
+			tmp.challs[layer][id] = {}
+
+			if (customActive ? data2.active(id) : player[layer].active == id) data[id] = 1
 			else delete data[id]
+
+			tmp.challs[layer][id].unl = data2[id].unl()
+			if(data2[id].name) tmp.challs[layer][id].name = data2[id].name()
+			if(data2[id].desc) tmp.challs[layer][id].desc = data2[id].desc()
+			if(data2[id].reward) tmp.challs[layer][id].reward = data2[id].reward()
+			if(data2[id].effect) tmp.challs[layer][id].effect = data2[id].effect()
+			if(data2[id].effectDisplay) tmp.challs[layer][id].effectDisplay = data2[id].effectDisplay(tmp.challs[layer][id].effect)
+			tmp.challs[layer][id].goal = data2[id].goal()
+			if(data2[id].style) tmp.challs[layer][id].style = data2[id].style()
+		}
+	}
+}
+
+function updateUpgradeTemp(layer) {
+	if (layers[layer] === undefined) return
+	if (!tmp.upgrades[layer]) tmp.upgrades[layer] = {}
+
+	let data2 = layers[layer].upgrades
+	for (let row = 1; row <= data2.rows; row++) {
+		for (let col = 1; col <= data2.cols; col++) {
+			let id = row * 10 + col
+			tmp.upgrades[layer][id] = {}
+			tmp.upgrades[layer][id].unl = data2[id].unl()
+			if(data2[id].effect) tmp.upgrades[layer][id].effect = data2[id].effect()
+			tmp.upgrades[layer][id].cost = data2[id].cost()
+			if(data2[id].effectDisplay) tmp.upgrades[layer][id].effectDisplay = data2[id].effectDisplay(tmp.upgrades[layer][id].effect)
+			if(data2[id].desc) tmp.upgrades[layer][id].desc = data2[id].desc()
+			if(data2[id].title) tmp.upgrades[layer][id].title = data2[id].title()
+			if(data2[id].style) tmp.upgrades[layer][id].style = data2[id].style()
+		}
+	}
+}
+
+function updateMilestoneTemp(layer) {
+	if (layers[layer] === undefined) return
+	if (!tmp.milestones[layer]) tmp.milestones[layer] = {}
+
+	let data2 = layers[layer].milestones
+	for (id in data2) {
+		tmp.milestones[layer][id] = {}
+		if(data2[id].unl) tmp.milestones[layer][id].unl = data2[id].unl()
+		tmp.milestones[layer][id].done = data2[id].done()
+		if(data2[id].requirementDesc) tmp.milestones[layer][id].requirementDesc = data2[id].requirementDesc()
+		if(data2[id].effectDesc) tmp.milestones[layer][id].effectDesc = data2[id].effectDesc()
+		if(data2[id].style) tmp.milestones[layer][id].style = data2[id].style()
+	
+	}
+}
+
+function updateBuyableTemp(layer) {
+	if (layers[layer] === undefined) return
+	if (!tmp.buyables[layer]) tmp.buyables[layer] = {}
+	let data2 = layers[layer].buyables
+	if(data2.respecText) tmp.buyables[layer].respecText = data2.respecText()
+	for (let row = 1; row <= data2.rows; row++) {
+		for (let col = 1; col <= data2.cols; col++) {
+			let id = row * 10 + col
+			let amt = player[layer].buyables[id]
+			tmp.buyables[layer][id] = {}
+			tmp.buyables[layer][id].unl = data2[id].unl()
+			if(data2[id].effect) tmp.buyables[layer][id].effect = data2[id].effect(amt)
+			tmp.buyables[layer][id].cost = data2[id].cost(amt)
+			tmp.buyables[layer][id].canAfford = data2[id].canAfford()
+			if(data2[id].title) tmp.buyables[layer][id].title = data2[id].title()
+			if(data2[id].display) tmp.buyables[layer][id].display = data2[id].display()
+			if(data2[id].style) tmp.buyables[layer][id].style = data2[id].style()
+
+		}
+	}
+}
+
+function updateMicrotabTemp(layer) {
+	if (layers[layer] === undefined) return
+	let data2 = layers[layer].microtabs
+	for (set in data2) {
+		if (!tmp.microtabs[layer][set]) tmp.microtabs[layer][set] = {}
+		for (tab in data2[set]) {
+			if (!tmp.microtabs[layer][set][tab])
+				tmp.microtabs[layer][set][tab] = {}
+			if(data2[set][tab].style)
+				tmp.microtabs[layer][set][tab].style = data2[set][tab].style()
+			if(data2[set][tab].buttonStyle)
+				tmp.microtabs[layer][set][tab].buttonStyle = data2[set][tab].buttonStyle()
+
+		}
+	}
+}
+
+
+function setupChallTemp(layer) {
+	if (player[layer] === undefined) return
+	if (!tmp.challs[layer]) tmp.challs[layer] = {}
+
+	let data = tmp.challActive[layer]
+	let data2 = layers[layer].challs
+	let customActive = data2.active !== undefined
+	for (let row = 1; row <= data2.rows; row++) {
+		for (let col = 1; col <= data2.cols; col++) {
+			let id = row * 10 + col
+
+			tmp.challs[layer][id] = {}
+			if(data2[id].effect) tmp.challs[layer][id].effect = {}
+			if(data2[id].style) tmp.challs[layer][id].style = {}
+		}
+	}
+}
+
+function setupUpgradeTemp(layer) {
+	if (layers[layer] === undefined) return
+	if (!tmp.upgrades[layer]) tmp.upgrades[layer] = {}
+
+	let data2 = layers[layer].upgrades
+	for (let row = 1; row <= data2.rows; row++) {
+		for (let col = 1; col <= data2.cols; col++) {
+			let id = row * 10 + col
+			tmp.upgrades[layer][id] = {}
+			if(data2[id].effect) tmp.upgrades[layer][id].effect = {}
+			if(data2[id].style) tmp.upgrades[layer][id].style = {}
+		}
+	}
+}
+
+function setupMilestoneTemp(layer) {
+	if (layers[layer] === undefined) return
+	if (!tmp.milestones[layer]) tmp.milestones[layer] = {}
+
+	let data2 = layers[layer].milestones
+	for (id in data2) {
+		tmp.milestones[layer][id] = {}
+		if(data2[id].style) tmp.milestones[layer][id].style = {}
+	}
+}
+
+function setupBuyableTemp(layer) {
+	if (layers[layer] === undefined) return
+	if (!tmp.buyables[layer]) tmp.buyables[layer] = {}
+	let data2 = layers[layer].buyables
+	for (let row = 1; row <= data2.rows; row++) {
+		for (let col = 1; col <= data2.cols; col++) {
+			let id = row * 10 + col
+			let amt = player[layer].buyables[id]
+			tmp.buyables[layer][id] = {}
+			if(data2[id].effect) tmp.buyables[layer][id].effect = {}
+			tmp.buyables[layer][id].cost = {}
+			if(data2[id].style) tmp.buyables[layer][id].style = {}
+
 		}
 	}
 }
