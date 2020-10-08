@@ -5,8 +5,8 @@ var NaNalert = false;
 var gameEnded = false;
 
 let VERSION = {
-	num: "1.3.4",
-	name: "Tabception... ception!"
+	num: "0.1",
+	name: "And so it begins."
 }
 
 // Determines if it should show points/sec
@@ -16,11 +16,12 @@ function showPointGen(){
 
 // Calculate points/sec!
 function getPointGen() {
-	if(!hasUpg("c", 11))
-		return new Decimal(0)
+	if (!hasUpg("p", 11)) return new Decimal(0)
 
 	let gain = new Decimal(1)
-	if (hasUpg("c", 12)) gain = gain.times(upgEffect("c", 12))
+	if (hasUpg("p", 12)) gain = gain.times(upgEffect("p", 12))
+	if (hasUpg("p", 13)) gain = gain.times(upgEffect("p", 13))
+	if (hasUpg("p", 22)) gain = gain.times(upgEffect("p", 22))
 	return gain
 }
 
@@ -383,7 +384,7 @@ VERSION.withoutName = "v" + VERSION.num + (VERSION.pre ? " Pre-Release " + VERSI
 VERSION.withName = VERSION.withoutName + (VERSION.name ? ": " + VERSION.name : "")
 
 
-const ENDGAME = new Decimal("e280000000");
+const ENDGAME = new Decimal(5e3);
 
 function gameLoop(diff) {
 	if (player.points.gte(ENDGAME) || gameEnded) gameEnded = 1
@@ -396,6 +397,8 @@ function gameLoop(diff) {
 	if (player.devSpeed) diff *= player.devSpeed
 
 	addTime(diff)
+
+	player.points = player.points.add(getPointGen().times(diff))
 
 	for (layer in layers){
 		if (layers[layer].update) layers[layer].update(diff);
