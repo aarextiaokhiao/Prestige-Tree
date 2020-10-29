@@ -5,8 +5,8 @@ var NaNalert = false;
 var gameEnded = false;
 
 let VERSION = {
-	num: "0.1",
-	name: "And so it begins."
+	num: "0.2",
+	name: "Boosters and Generators"
 }
 
 // Determines if it should show points/sec
@@ -22,6 +22,9 @@ function getPointGen() {
 	if (hasUpg("p", 12)) gain = gain.times(upgEffect("p", 12))
 	if (hasUpg("p", 13)) gain = gain.times(upgEffect("p", 13))
 	if (hasUpg("p", 22)) gain = gain.times(upgEffect("p", 22))
+
+	if (player.b.unl) gain = gain.times(tmp.layerEffs.b)
+	if (player.g.unl) gain = gain.times(layers.g.powEff())
 	return gain
 }
 
@@ -62,6 +65,9 @@ function getResetGain(layer, useType = null) {
 	if (type=="static") {
 		if ((!layers[layer].canBuyMax()) || tmp.layerAmt[layer].lt(tmp.layerReqs[layer])) return new Decimal(1)
 		let gain = tmp.layerAmt[layer].div(tmp.layerReqs[layer]).div(tmp.gainMults[layer]).max(1).log(layers[layer].base).times(tmp.gainExp[layer]).pow(Decimal.pow(layers[layer].exponent, -1))
+
+		if (gain.gte(12)) gain = gain.times(12).sqrt()
+
 		return gain.floor().sub(player[layer].points).add(1).max(1);
 	} else if (type=="normal"){
 		if (tmp.layerAmt[layer].lt(tmp.layerReqs[layer])) return new Decimal(0)
@@ -84,6 +90,8 @@ function getNextAt(layer, canMax=false, useType = null) {
 	{
 		if (!layers[layer].canBuyMax()) canMax = false
 		let amt = player[layer].points.plus((canMax&&tmp.layerAmt[layer].gte(tmp.nextAt[layer]))?tmp.resetGain[layer]:0)
+		if (amt.gte(12)) amt = amt.sqr().div(12)
+
 		let extraCost = Decimal.pow(layers[layer].base, amt.pow(layers[layer].exponent).div(tmp.gainExp[layer])).times(tmp.gainMults[layer])
 		let cost = extraCost.times(tmp.layerReqs[layer]).max(tmp.layerReqs[layer])
 		if (layers[layer].resCeil) cost = cost.ceil()
@@ -119,12 +127,13 @@ function shouldNotify(layer){
 
 function rowReset(row, layer) {
 	for (lr in ROW_LAYERS[row]){
-		if(layers[lr].doReset) {
+		if (layers[lr].doReset) {
 			player[lr].active = null // Exit challenges on any row reset on an equal or higher row
 			layers[lr].doReset(layer)
+		} else if (layers[layer].row > layers[lr].row) {
+			if (layers[lr].clear) layers[lr].clear(layer)
+			else fullLayerReset(lr)
 		}
-		else
-			if(layers[layer].row > layers[lr].row) fullLayerReset(lr)
 	}
 }
 
@@ -219,6 +228,11 @@ function doReset(layer, force=false) {
 
 	for (let x = row; x >= 0; x--) rowReset(x, layer)
 	prevOnReset = undefined
+
+	for (let x in ROW_LAYERS[row]) {
+		let data = layers[x].onReset
+		if (data) data()
+	}
 
 	setupTemp();
 	updateTemp()
@@ -384,7 +398,7 @@ VERSION.withoutName = "v" + VERSION.num + (VERSION.pre ? " Pre-Release " + VERSI
 VERSION.withName = VERSION.withoutName + (VERSION.name ? ": " + VERSION.name : "")
 
 
-const ENDGAME = new Decimal(5e3);
+const ENDGAME = new Decimal(1e110);
 
 function gameLoop(diff) {
 	if (player.points.gte(ENDGAME) || gameEnded) gameEnded = 1

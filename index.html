@@ -15,6 +15,7 @@
 	<script type="text/javascript" src="js/break_eternity.js"></script>
 	<script type="text/javascript" src="js/layerSupport.js"></script>
 	<script type="text/javascript" src="js/row_1.js"></script>
+	<script type="text/javascript" src="js/row_2.js"></script>
 	<script type="text/javascript" src="js/temp.js"></script>
 	<script type="text/javascript" src="js/saves.js"></script>
 	<script type="text/javascript" src="js/utils.js"></script>
@@ -46,12 +47,15 @@
 			<br><br><br>
 			<h1>Oh, you are still reading this?</h1>
 			<br>
-			Currently, you can't get the last Prestige upgrade easily...
-			<br>
-			But in the next update, row 2 will be recreated in my mod! Stay tuned.
+			In the next update, row 3 will be recreated in my mod! Stay tuned.
 		</div>
 		<div v-if="player.tab=='changelog'" class="col right">
 			<button class="back" onclick="showTab('tree')">←</button><br><br><br>
+			<h3>v0.2: Boosters and Generators</h3>
+			<ul>
+				<li>Ported all of row 2 content.</li>
+			</ul>
+			<br><br>
 			<h3>v0.1: And so it begins.</h3>
 			<ul>
 				<li>Ported all of row 1 content.</li>
@@ -133,6 +137,11 @@
 				<td><layer-node layer='p' abb='P'></layer-node></td>
 			</table><table>
 				<td><button class="treeNode hidden"></button></td>
+			</table><table>
+				<td><layer-node layer='b' abb='B'></layer-node></td>
+				<td><layer-node layer='g' abb='G'></layer-node></td>
+			</table><table>
+				<td><button class="treeNode hidden"></button></td>
 			</table>
 			<canvas id="treeCanvas" class="canvas"></canvas>
 		</div>
@@ -144,8 +153,7 @@
 					<prestige-button v-bind:style="tmp.componentStyles[layer]['prestige-button']" :layer="layer"></prestige-button>
 					<span v-if="layers[layer].type=='normal' && tmp.resetGain[layer].lt(100) && player[layer].points.lt(1e3)"><br>You have {{formatWhole(tmp.layerAmt[layer])}} {{layers[layer].baseResource}}</span>
 					<br><br>
-					<span v-if="player[layer].best != undefined">Your best {{layers[layer].resource}} is {{formatWhole(player[layer].best)}}<br></span>
-					<span v-if="player[layer].total != undefined">You have made a total of {{formatWhole(player[layer].total)}} {{layers[layer].resource}}<br></span>
+					<stats v-bind:style="tmp.componentStyles[layer].stats" :layer="layer"></stats>
 					<milestones v-bind:style="tmp.componentStyles[layer].milestones" :layer="layer"></milestones>
 					<buyables v-bind:style="tmp.componentStyles[layer].buyables" :layer="layer"></buyables>
 					<upgrades v-bind:style="tmp.componentStyles[layer]['upgrades']" :layer="layer"></upgrades>

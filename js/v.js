@@ -86,6 +86,14 @@ function loadVue() {
 		`
 	})
 
+	Vue.component('stats', {
+		props: ['layer'],
+		template: `
+			<span v-if="player[layer].best != undefined">Your best {{layers[layer].resource}} is {{formatWhole(player[layer].best)}}<br></span>
+			<span v-if="player[layer].total != undefined">You have made a total of {{formatWhole(player[layer].total)}} {{layers[layer].resource}}<br></span>
+		`
+	})
+
 	Vue.component('challs', {
 		props: ['layer'],
 		template: `
