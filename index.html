@@ -38,8 +38,7 @@
 			<div v-if="player.tab=='gameEnded'" class="fullWidth">
 				<br>
 				<h2>Prestige Tree {{VERSION.withoutName}}</h2><br><br>
-				<h3>Congratulations! You have reached the end and beaten this game, but for now...</h3><br>
-				<h3>Please check the Discord to see there are new content updates!</h3><br><br>
+				<h3>Congratulations! You have reached the end and beaten this game!</h3><br><br>
 				<div v-if="!player.timePlayedReset">It took you {{formatTime(player.timePlayed)}} to beat the game.</div>
 				<div v-if="player.timePlayedReset">Make sure that you record the time in your stream or else your speedrun won't count! (this is due to a bug by the way)</div>
 				<br>
@@ -50,12 +49,23 @@
 				<br><br>
 				If you would like to speedrun this, press Play Again and record your attempt, then submit it on my Discord Server in the channel #speedrun-submissions.
 				<br><br><br>
-				<h1>Oh, you are still reading this?</h1>
+				<h1>Thanks for playing!</h1>
 				<br>
-				If you'd like, you can help out with beta testing!<br>
-				<a class="link">Test server</a> (Coming soon!)
+				I recommend you to play PT: Rewritten, which rewrites this game to fix the gameplay issues and support The Modding Tree v2.
+				<br>
+				<a class="link" href="http://raw.githack.com/AbitofTetration/Prestige-Tree-Rewritten/master/">PT: Rewritten</a> (by Jacorb and Despacit)
 				<br><br>
-				For next update, there will be a bunch of new layers from Rows 5-7! Stay tuned!
+				Want to make a mod of The Prestige Tree? Check out the Modding Tree!
+				<br>
+				<a class="link" href="http://github.com/Acamaeda/The-Modding-Tree">The Modding Tree</a> (by Acamaeda)
+				<br><br>
+				You are feel free to play mods from the Modding Tree:
+				<br>
+				<a class="link" href="http://yhvr.me/pt/mods.html">PT: Mods</a> (listed by Yhvr)
+				<br><br>
+				Unfortunately, this game won't be updated anymore. You have reached the actual end.
+				<br><br>
+				See you at PT: Rewritten!
 			</div>
 			<div v-if="player.tab=='changelog'" class="col right">
 				<button class="back" onclick="showTab('tree')">←</button><br>
@@ -356,7 +366,7 @@
 			</div>
 			<div v-if="player.tab=='info'" class="col right" style="overflow-x: hidden;">
 				<button class="back" onclick="showTab('tree')">←</button><br>
-				<h2>Prestige Tree</h2>
+				<h2>Prestige Tree: Classic</h2>
 				<br>
 				<h3>{{VERSION.withName}}</h3>
 				<br>
@@ -367,7 +377,7 @@
 				Idea by papyrus (on discord)
 				<br><br>
 				<div class="link" onclick="showTab('changelog')">Changelog</div><br>
-				<a class="link">Test server</a> (Coming soon!)<br><br>
+				<a class="link" href="http://raw.githack.com/AbitofTetration/Prestige-Tree-Rewritten/master/">PT: Rewritten</a><br>
 				<a class="link" href="http://discord.gg/wwQfgPa" target="_blank">Jacorb's Discord</a><br>
 				<a class="link" href="http://aarextiaokhiao.github.io/" target="_blank">Aarex's Home</a>
 				<br>
