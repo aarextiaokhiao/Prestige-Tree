@@ -6677,7 +6677,7 @@ addLayer("i", {
 addLayer("ma", {
 		name: "mastery", // This is optional, only used in a few places, If absent it just uses the layer id.
         symbol: "MA", // This appears on the layer's node. Default is the id with the first letter capitalized
-        position: 1, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        position: 2, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
         startData() { return {
             unlocked: false,
 			points: new Decimal(0),
@@ -6911,7 +6911,7 @@ addLayer("ma", {
 addLayer("ge", {
 		name: "gears", // This is optional, only used in a few places, If absent it just uses the layer id.
         symbol: "GE", // This appears on the layer's node. Default is the id with the first letter capitalized
-        position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        position: 1, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
         startData() { return {
             unlocked: false,
 			points: new Decimal(0),
@@ -7220,7 +7220,7 @@ addLayer("ge", {
 addLayer("mc", {
 		name: "machines", // This is optional, only used in a few places, If absent it just uses the layer id.
         symbol: "MC", // This appears on the layer's node. Default is the id with the first letter capitalized
-        position: 2, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        position: 3, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
         startData() { return {
             unlocked: false,
 			points: new Decimal(0),
@@ -8989,4 +8989,83 @@ addLayer("ab", {
 			style: {"background-color"() { return player.ne.auto?"#ded9ff":"#666666" }},
 		},
 	},
+})
+
+addLayer("ai", {
+	startData() { return {unlocked: true}},
+	color: "#bfdfbf",
+	symbol: "AI",
+	position: 0,
+	row: 6,
+	branches: ["r", ["id", 3]],
+	layerShown() { return player.r.unlocked && player.id.unlocked },
+	tooltip: "0 Superintelligence | Just a meme..."
+})
+
+addLayer("c", {
+	startData() { return {unlocked: true}},
+	color: "#cfbfdf",
+	symbol: "C",
+	position: 4,
+	row: 6,
+	branches: ["i", "id"],
+	layerShown() { return player.r.unlocked && player.id.unlocked },
+	tooltip: "0 Civilization Power | Just a meme..."
+})
+
+
+addLayer("D", {
+	startData() { return {unlocked: true}},
+	color: "#ffff7f",
+	symbol: "D",
+	position: 0,
+	row: 7,
+	branches: ["ai", "c"],
+	layerShown() { return player.r.unlocked && player.id.unlocked },
+	tooltip: "0 Discoveries | Just a meme..."
+})
+
+addLayer("spook1", {
+	position: 1,
+	row: 7,
+    layerShown: "ghost"
+})
+
+addLayer("sp", {
+	startData() { return {unlocked: true}},
+	color: "#31aeb0",
+	symbol: "SP",
+	position: 2,
+	row: 7,
+	branches: [["ma", 3]],
+	layerShown() { return player.r.unlocked && player.id.unlocked },
+	tooltip: "0 Super-Prestige Points | Just a meme..."
+})
+
+addLayer("f", {
+	startData() { return {unlocked: true}},
+	color: "#978f7f",
+	symbol: "F",
+	position: 3,
+	row: 7,
+	branches: [["ge", 2], ["mc", 2]],
+	layerShown() { return player.r.unlocked && player.id.unlocked },
+	tooltip: "0 Fuel | Just a meme..."
+})
+
+addLayer("spook2", {
+	position: 4,
+	row: 7,
+    layerShown: "ghost"
+})
+
+addLayer("tr", {
+	startData() { return {unlocked: true}},
+	color: "#9f9f9f",
+	symbol: "TR",
+	position: 5,
+	row: 7,
+	branches: ["mc", "c"],
+	layerShown() { return player.r.unlocked && player.id.unlocked },
+	tooltip: "0 Thrusters | Just a meme..."
 })
