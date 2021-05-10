@@ -9304,17 +9304,6 @@ addLayer("ab", {
 	},
 })
 
-addLayer("ai", {
-	startData() { return {unlocked: true}},
-	color: "#bfdfbf",
-	symbol: "AI",
-	position: 0,
-	row: 6,
-	branches: ["r", ["id", 3]],
-	layerShown() { return player.r.unlocked && player.id.unlocked },
-	tooltip: "0 Superintelligence | Just a meme..."
-})
-
 addLayer("c", {
 	startData() { return {unlocked: true}},
 	color: "#cfbfdf",
