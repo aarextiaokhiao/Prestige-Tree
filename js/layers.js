@@ -9612,18 +9612,6 @@ addLayer("ab", {
 	},
 })
 
-addLayer("c", {
-	startData() { return {unlocked: true}},
-	color: "#cfbfdf",
-	symbol: "C",
-	position: 4,
-	row: 6,
-	branches: ["i", "id"],
-	layerShown() { return player.r.unlocked && player.id.unlocked },
-	tooltip: "0 Civilization Power | Just a meme..."
-})
-
-
 addLayer("D", {
 	startData() { return {unlocked: true}},
 	color: "#ffff7f",
@@ -9631,7 +9619,7 @@ addLayer("D", {
 	position: 0,
 	row: 7,
 	branches: ["ai", "c"],
-	layerShown() { return player.r.unlocked && player.id.unlocked },
+	layerShown() { return player.c.unlocked },
 	tooltip: "0 Discoveries | Just a meme..."
 })
 
@@ -9648,7 +9636,7 @@ addLayer("sp", {
 	position: 2,
 	row: 7,
 	branches: [["ma", 3]],
-	layerShown() { return player.r.unlocked && player.id.unlocked },
+	layerShown() { return player.c.unlocked },
 	tooltip: "0 Super-Prestige Points | Just a meme..."
 })
 
@@ -9659,7 +9647,7 @@ addLayer("f", {
 	position: 3,
 	row: 7,
 	branches: [["ge", 2], ["mc", 2]],
-	layerShown() { return player.r.unlocked && player.id.unlocked },
+	layerShown() { return player.c.unlocked },
 	tooltip: "0 Fuel | Just a meme..."
 })
 
@@ -9676,6 +9664,6 @@ addLayer("tr", {
 	position: 5,
 	row: 7,
 	branches: ["mc", "c"],
-	layerShown() { return player.r.unlocked && player.id.unlocked },
+	layerShown() { return player.c.unlocked },
 	tooltip: "0 Thrusters | Just a meme..."
 })
