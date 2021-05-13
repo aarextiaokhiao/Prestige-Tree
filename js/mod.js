@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal(1/0),
-	specialEndgameText: "v1.3 Beta 17 Endgame: e5.75e15 Points",
+	specialEndgameText: "v1.3 Beta 20 Endgame: e1.12e16 Points & 4 Civilization Power",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.3",
-	beta: 17,
+	beta: 20,
 	name: "The Expansion Update",
 }
 
