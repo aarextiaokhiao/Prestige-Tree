@@ -8,14 +8,13 @@ let modInfo = {
 	changelogLink: "https://github.com/Jacorb90/Prestige-Tree/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal(1/0),
-	specialEndgameText: "v1.3 Beta 20 Endgame: e1.12e16 Points & 4 Civilization Power",
+	endgame: new Decimal("e3.14e16"),
+	// specialEndgameText: "v1.3 Endgame: e3.14e16 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.3",
-	beta: 20,
 	name: "The Expansion Update",
 }
 
